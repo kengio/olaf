@@ -1,0 +1,7 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability (private)
+    url: https://github.com/kengio/olaf/security/advisories/new
+    about: >-
+      Use this only when repository owners have enabled private reporting. Do not
+      put vulnerability details in a public issue if the form is unavailable.

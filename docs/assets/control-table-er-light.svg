@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 990 620" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Entity-relationship diagram of the four control tables with every column. onelake_security_config (PK role_name) and onelake_security_member (PK member_type + member_name) both feed generate, which builds onelake_security_mapping (PK role_name + scope_path; FK member_*_ids to member, FK config_hash). Both config (generate) and mapping (plan/apply) write onelake_security_log (FK config_hash, mapping_hash, member_id). All relationships are one-to-many: config-to-mapping, config-to-log, mapping-to-log, and member-to-mapping (one member row is referenced by many mapping rows)."><title>Entity-relationship diagram of the four control tables with every column. onelake_security_config (PK role_name) and onelake_security_member (PK member_type + member_name) both feed generate, which builds onelake_security_mapping (PK role_name + scope_path; FK member_*_ids to member, FK config_hash). Both config (generate) and mapping (plan/apply) write onelake_security_log (FK config_hash, mapping_hash, member_id). All relationships are one-to-many: config-to-mapping, config-to-log, mapping-to-log, and member-to-mapping (one member row is referenced by many mapping rows).</title>
+  <defs>
+    <marker id="onel" viewBox="0 0 12 14" refX="6" refY="7" markerWidth="10" markerHeight="12" orient="auto">
+      <path d="M4 2 L4 12 M8 2 L8 12" stroke="#8a94a6" fill="none" stroke-width="1.3"/>
+    </marker>
+    <marker id="manyl" viewBox="0 0 12 14" refX="11" refY="7" markerWidth="11" markerHeight="13" orient="auto">
+      <path d="M0 7 L11 1 M0 7 L11 7 M0 7 L11 13" stroke="#8a94a6" fill="none" stroke-width="1.3"/>
+    </marker>
+  </defs>
+  <style>
+    .nm{font-size:12.5px;font-weight:700;fill:#ffffff}
+    .col{font-size:10.5px;fill:#3a4250}
+    .pk{font-size:10.5px;font-weight:700;fill:#22303a}
+    .kt{font-size:8.5px;font-weight:700;fill:#8a94a6}
+    .ln{stroke:#8a94a6;stroke-width:1.6;fill:none}
+    .rel{font-size:11px;font-style:italic;font-weight:600;fill:#5a6472}
+  </style>
+  <rect x="40" y="145" width="250" height="306" rx="8" fill="#eef1fc" stroke="#7c8fd6" stroke-width="1.5"/>
+  <path d="M40 153 Q40 145 48 145 L282 145 Q290 145 290 153 L290 171 L40 171 Z" fill="#7c8fd6"/>
+  <text class="nm" x="165" y="163" text-anchor="middle">onelake_security_config</text>
+  <text class="pk" x="53" y="182">role_name</text>
+  <text class="kt" x="282" y="182" text-anchor="end">PK</text>
+  <text class="col" x="53" y="196">lakehouse_name</text>
+  <text class="col" x="53" y="210">include_tables</text>
+  <text class="col" x="53" y="224">exclude_tables</text>
+  <text class="col" x="53" y="238">include_folders</text>
+  <text class="col" x="53" y="252">exclude_folders</text>
+  <text class="col" x="53" y="266">permission</text>
+  <text class="col" x="53" y="280">rls_condition</text>
+  <text class="col" x="53" y="294">include_columns</text>
+  <text class="col" x="53" y="308">exclude_columns</text>
+  <text class="col" x="53" y="322">include_group_names</text>
+  <text class="col" x="53" y="336">exclude_group_names</text>
+  <text class="col" x="53" y="350">include_user_names</text>
+  <text class="col" x="53" y="364">exclude_user_names</text>
+  <text class="col" x="53" y="378">include_sp_names</text>
+  <text class="col" x="53" y="392">exclude_sp_names</text>
+  <text class="col" x="53" y="406">include_mi_names</text>
+  <text class="col" x="53" y="420">exclude_mi_names</text>
+  <text class="col" x="53" y="434">active</text>
+  <text class="col" x="53" y="448">notes</text>
+  <rect x="365" y="20" width="250" height="68" rx="8" fill="#f0ebfc" stroke="#8e44ad" stroke-width="1.5"/>
+  <path d="M365 28 Q365 20 373 20 L607 20 Q615 20 615 28 L615 46 L365 46 Z" fill="#8e44ad"/>
+  <text class="nm" x="490" y="38" text-anchor="middle">onelake_security_member</text>
+  <text class="pk" x="378" y="57">member_type</text>
+  <text class="kt" x="607" y="57" text-anchor="end">PK</text>
+  <text class="pk" x="378" y="71">member_name</text>
+  <text class="kt" x="607" y="71" text-anchor="end">PK</text>
+  <text class="col" x="378" y="85">member_id</text>
+  <rect x="365" y="145" width="250" height="348" rx="8" fill="#d9f2ea" stroke="#3fae8e" stroke-width="1.5"/>
+  <path d="M365 153 Q365 145 373 145 L607 145 Q615 145 615 153 L615 171 L365 171 Z" fill="#3fae8e"/>
+  <text class="nm" x="490" y="163" text-anchor="middle">onelake_security_mapping</text>
+  <text class="pk" x="378" y="182">role_name</text>
+  <text class="kt" x="607" y="182" text-anchor="end">PK</text>
+  <text class="col" x="378" y="196">workspace_name</text>
+  <text class="col" x="378" y="210">lakehouse_name</text>
+  <text class="col" x="378" y="224">workspace_id</text>
+  <text class="col" x="378" y="238">lakehouse_id</text>
+  <text class="col" x="378" y="252">tenant_id</text>
+  <text class="pk" x="378" y="266">scope_path</text>
+  <text class="kt" x="607" y="266" text-anchor="end">PK</text>
+  <text class="col" x="378" y="280">scope_type</text>
+  <text class="col" x="378" y="294">permission</text>
+  <text class="col" x="378" y="308">rls_condition</text>
+  <text class="col" x="378" y="322">visible_columns</text>
+  <text class="col" x="378" y="336">member_group_names</text>
+  <text class="col" x="378" y="350">member_group_ids</text>
+  <text class="kt" x="607" y="350" text-anchor="end">FK</text>
+  <text class="col" x="378" y="364">member_user_names</text>
+  <text class="col" x="378" y="378">member_user_ids</text>
+  <text class="kt" x="607" y="378" text-anchor="end">FK</text>
+  <text class="col" x="378" y="392">member_sp_names</text>
+  <text class="col" x="378" y="406">member_sp_ids</text>
+  <text class="kt" x="607" y="406" text-anchor="end">FK</text>
+  <text class="col" x="378" y="420">member_mi_names</text>
+  <text class="col" x="378" y="434">member_mi_ids</text>
+  <text class="kt" x="607" y="434" text-anchor="end">FK</text>
+  <text class="col" x="378" y="448">generated_at</text>
+  <text class="col" x="378" y="462">config_hash</text>
+  <text class="kt" x="607" y="462" text-anchor="end">FK</text>
+  <text class="col" x="378" y="476">config_version</text>
+  <text class="col" x="378" y="490">framework_version</text>
+  <rect x="690" y="145" width="275" height="404" rx="8" fill="#fcefd6" stroke="#d99a45" stroke-width="1.5"/>
+  <path d="M690 153 Q690 145 698 145 L957 145 Q965 145 965 153 L965 171 L690 171 Z" fill="#d99a45"/>
+  <text class="nm" x="828" y="163" text-anchor="middle">onelake_security_log</text>
+  <text class="pk" x="703" y="182">batch_id</text>
+  <text class="kt" x="957" y="182" text-anchor="end">PK</text>
+  <text class="pk" x="703" y="196">run_id</text>
+  <text class="kt" x="957" y="196" text-anchor="end">PK</text>
+  <text class="col" x="703" y="210">run_at</text>
+  <text class="col" x="703" y="224">env</text>
+  <text class="col" x="703" y="238">mode</text>
+  <text class="col" x="703" y="252">workspace_name</text>
+  <text class="col" x="703" y="266">lakehouse_name</text>
+  <text class="col" x="703" y="280">role_name</text>
+  <text class="col" x="703" y="294">scope_path</text>
+  <text class="col" x="703" y="308">scope_type</text>
+  <text class="col" x="703" y="322">member_name</text>
+  <text class="col" x="703" y="336">member_id</text>
+  <text class="kt" x="957" y="336" text-anchor="end">FK</text>
+  <text class="col" x="703" y="350">member_type</text>
+  <text class="col" x="703" y="364">action</text>
+  <text class="col" x="703" y="378">status</text>
+  <text class="col" x="703" y="392">error_category</text>
+  <text class="col" x="703" y="406">message</text>
+  <text class="col" x="703" y="420">run_by</text>
+  <text class="col" x="703" y="434">run_duration</text>
+  <text class="col" x="703" y="448">config_hash</text>
+  <text class="kt" x="957" y="448" text-anchor="end">FK</text>
+  <text class="col" x="703" y="462">config_version</text>
+  <text class="col" x="703" y="476">workspace_id</text>
+  <text class="col" x="703" y="490">lakehouse_id</text>
+  <text class="col" x="703" y="504">tenant_id</text>
+  <text class="col" x="703" y="518">mapping_hash</text>
+  <text class="kt" x="957" y="518" text-anchor="end">FK</text>
+  <text class="col" x="703" y="532">mapping_version</text>
+  <text class="col" x="703" y="546">framework_version</text>
+  <path class="ln" d="M490 94 L490 139" marker-start="url(#onel)" marker-end="url(#manyl)"/>
+  <text class="rel" x="502" y="120" text-anchor="start">resolves name → id</text>
+  <path class="ln" d="M296 245 L359 245" marker-start="url(#onel)" marker-end="url(#manyl)"/>
+  <text class="rel" x="327" y="230" text-anchor="middle">generate</text>
+  <path class="ln" d="M621 245 L684 245" marker-start="url(#onel)" marker-end="url(#manyl)"/>
+  <text class="rel" x="652" y="230" text-anchor="middle">plan · apply</text>
+  <path class="ln" d="M120 458 L120 582 L800 582 L800 557" marker-start="url(#onel)" marker-end="url(#manyl)"/>
+  <text class="rel" x="445" y="571" text-anchor="middle">generate → log</text>
+</svg>

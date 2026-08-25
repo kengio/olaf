@@ -1,0 +1,11 @@
+# Dependabot watches both immutable Actions pins and the hash-locked CI Python inputs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /requirements
+    schedule:
+      interval: weekly

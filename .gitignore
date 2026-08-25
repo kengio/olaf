@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+out/
+*.egg-info/
+.pytest_cache/
+.DS_Store
+.superpowers/
+.worktree/
+tests/_olaf_runtime.py
+.coverage
+reports/
+brand-drafts/

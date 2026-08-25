@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Lower-level API: FabricClient (Fabric REST plus the lakehouse target guard) and the onelake_security_member cache (No-Graph, read by generate/validate/explain) both feed Deployment, which orchestrates the eight modes and writes one row per audit step into onelake_security_log through Log; Audit reads that same table back out."><title>Lower-level API: FabricClient (Fabric REST plus the lakehouse target guard) and the onelake_security_member cache (No-Graph, read by generate/validate/explain) both feed Deployment, which orchestrates the eight modes and writes one row per audit step into onelake_security_log through Log; Audit reads that same table back out.</title>
+  <defs>
+    <marker id="pad" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a94a6"/></marker>
+  </defs>
+  <style>
+    .box{stroke-width:2}
+    .t{font-size:13.5px;font-weight:700}
+    .s{font-size:10.5px;fill:#9aa4b2}
+    .ln{stroke:#8a94a6;stroke-width:2;fill:none}
+    .lbl{font-size:10.5px;fill:#9aa4b2;font-weight:600}
+  </style>
+  <rect class="box" x="20" y="30" width="210" height="74" rx="11" fill="#1e2540" stroke="#7c8fd6"/>
+  <text class="t" x="125" y="54" text-anchor="middle" fill="#aeb9f0">FabricClient</text>
+  <text class="s" x="125" y="71" text-anchor="middle">Fabric REST · list/put roles</text>
+  <text class="s" x="125" y="85" text-anchor="middle">+ the lakehouse target guard</text>
+  <rect class="box" x="20" y="186" width="210" height="74" rx="11" fill="#1e2540" stroke="#7c8fd6"/>
+  <text class="t" x="125" y="210" text-anchor="middle" fill="#aeb9f0">onelake_security_member</text>
+  <text class="s" x="125" y="227" text-anchor="middle">No-Graph name → objectId cache</text>
+  <text class="s" x="125" y="241" text-anchor="middle">read by generate/validate/explain</text>
+  <rect class="box" x="300" y="117" width="150" height="56" rx="11" fill="#241f3d" stroke="#8b7fd0"/>
+  <text class="t" x="375" y="150" text-anchor="middle" fill="#c3b8f5">Deployment</text>
+  <text class="s" x="375" y="188" text-anchor="middle">orchestrates the 8 modes</text>
+  <rect class="box" x="520" y="117" width="220" height="56" rx="11" fill="#16281f" stroke="#3fae8e"/>
+  <text class="t" x="630" y="150" text-anchor="middle" fill="#7fe0a8">onelake_security_log</text>
+  <rect class="box" x="555" y="24" width="150" height="46" rx="11" fill="#262b36" stroke="#9aa4b2"/>
+  <text class="t" x="630" y="48" text-anchor="middle" fill="#d0d6e0">Log</text>
+  <text class="s" x="630" y="65" text-anchor="middle">writes</text>
+  <rect class="box" x="555" y="226" width="150" height="46" rx="11" fill="#262b36" stroke="#9aa4b2"/>
+  <text class="t" x="630" y="250" text-anchor="middle" fill="#d0d6e0">Audit</text>
+  <text class="s" x="630" y="267" text-anchor="middle">reads</text>
+  <path class="ln" d="M230 67 H265 V131 H300" marker-end="url(#pad)"/>
+  <path class="ln" d="M230 223 H265 V159 H300" marker-end="url(#pad)"/>
+  <path class="ln" d="M450 145 H520" marker-end="url(#pad)"/>
+  <text class="lbl" x="485" y="137" text-anchor="middle">one row</text>
+  <text class="lbl" x="485" y="163" text-anchor="middle">per step</text>
+  <path class="ln" d="M630 70 V117" marker-end="url(#pad)"/>
+  <path class="ln" d="M630 173 V226" marker-end="url(#pad)"/>
+</svg>

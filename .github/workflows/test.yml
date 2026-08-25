@@ -1,0 +1,119 @@
+name: tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Third-party actions are pinned to a full commit SHA, with the tag it resolved to in a trailing
+# comment. A tag is mutable — `actions/checkout@v4` is whatever the v4 branch points at today, so a
+# compromised or force-moved tag runs foreign code with this repo's checkout. The comment is the
+# human-readable part; the SHA is the part git verifies. To bump one: resolve the new tag to its
+# commit with `git ls-remote --tags https://github.com/actions/checkout`, then update the SHA and its
+# version comment in the same edit.
+#
+# The Python tools are consumed from reviewed, fully transitive, hash-locked requirements files.
+# `--require-hashes` and `--only-binary=:all:` prevent a CI job from silently resolving or building
+# a different dependency graph. See requirements/README.md for regeneration and validation.
+
+jobs:
+  # The whole suite, plus the 100% branch-coverage gate on olaf.ipynb's library cells
+  # (white-box + in-memory-fake black-box).
+  #
+  # There is no separate coverage job any more: `fail_under = 100` lives in pyproject.toml
+  # ([tool.coverage.report]), so `pytest --cov` IS the gate — it fails the job below 100% and
+  # prints every missing line. tests/conftest.py extracts the notebook's library cells to
+  # tests/_olaf_runtime.py on every run, so the measured surface is always the current notebook.
+  # See docs/testing.md.
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: "python -m pip install --require-hashes --only-binary=:all: -r requirements/ci-test.txt"
+      - run: python -m pip check
+      - run: pytest --cov
+
+  # Notebook + suite lint and format check (nbqa + ruff). A separate job so it stays
+  # visible on the PR without gating the `tests` job. Config: pyproject.toml.
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.11"
+      - run: "python -m pip install --require-hashes --only-binary=:all: -r requirements/ci-lint.txt"
+      - run: python -m pip check
+      - run: scripts/lint.sh
+
+  # External http(s) links — ADVISORY, never a gate. Internal links (files + anchors) are gated
+  # inside the `tests` job by tests/test_doc_links.py, because a broken one is always our bug.
+  # These are not ours: a rate-limited Learn page or a host that refuses HEAD would fail a build
+  # with nothing wrong in it. continue-on-error keeps the report visible without blocking a merge.
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.11"
+      - run: python3 scripts/check_external_links.py
+
+  # Release-hygiene gates inspect the exact checked-out tree, a deterministic archive, and Git
+  # history. They have no token beyond the workflow-level read permission and no artifact upload.
+  release_hygiene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.11"
+      - run: "python -m pip install --require-hashes --only-binary=:all: -r requirements/ci-test.txt"
+      - run: python -m pip check
+      - run: pytest -q tests/test_public_release.py
+      - name: Verify the exact source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive_one="$RUNNER_TEMP/olaf-v1.0.0-one.tar"
+          archive_two="$RUNNER_TEMP/olaf-v1.0.0-two.tar"
+          git archive --format=tar --prefix=olaf-1.0.0/ --output="$archive_one" HEAD
+          git archive --format=tar --prefix=olaf-1.0.0/ --output="$archive_two" HEAD
+          cmp --silent "$archive_one" "$archive_two"
+          sha256sum "$archive_one"
+          python scripts/check_public_release.py archive "$archive_one" --tree HEAD --prefix olaf-1.0.0/
+          source_tree="$RUNNER_TEMP/olaf-v1.0.0"
+          mkdir "$source_tree"
+          tar --extract --file="$archive_one" --directory="$source_tree"
+          python scripts/check_secrets.py self-test
+          python scripts/check_secrets.py tree "$source_tree/olaf-1.0.0"
+          python scripts/check_secrets.py history .
+          python scripts/check_secrets.py all-objects .

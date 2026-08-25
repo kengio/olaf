@@ -1,0 +1,57 @@
+[tool.ruff]
+# Lint + format for the whole repo: the five notebooks through nbqa, and the pytest suite under
+# tests/ directly (see docs/testing.md → "Linting & formatting", and scripts/lint.sh).
+line-length = 100
+target-version = "py311"        # matches the CI floor (Python >= 3.11)
+
+# tests/_olaf_runtime.py is NOT source: tests/conftest.py regenerates it from notebooks/olaf.ipynb
+# on every run, so linting it would lint the notebook's cells a second time, under the strict
+# tests/ pass that the notebook is deliberately exempt from. It is gitignored for the same reason.
+extend-exclude = ["tests/_olaf_runtime.py"]
+
+[tool.ruff.lint]
+# Deliberately the conservative default rule set — pyflakes (F) plus the
+# pycodestyle error groups (E4 import formatting, E7 statement/lambda style,
+# E9 syntax). No import-sorting (I) or opinionated refactor rules that would
+# force behavior-touching rewrites of this notebook code.
+select = ["E4", "E7", "E9", "F"]
+
+# No per-file-ignores here. F821/E402 are false positives on all five NOTEBOOKS — they reference
+# the runtime's public API via `%run` and read Fabric-injected papermill params, neither of which
+# ruff can resolve in isolation — but they CANNOT be expressed as a per-file-ignore glob: nbqa
+# lints a temp copy whose name is the notebook stem plus a random suffix, and the stems here are
+# prefixes of one another (`olaf`, `olaf_cookbook`, `olaf_master_workflow`, `olaf_runner`,
+# `olaf_test_smoke`), so
+# no glob isolates one notebook's temp copy from another. An earlier `*olaf[!_]*` hack matched on
+# the first random character and flaked ~1/37 of runs.
+#
+# So scripts/lint.sh runs two passes: the five notebooks with `--extend-ignore=F821,E402`, and
+# tests/ STRICTLY with no exemptions at all — plain .py with no injected globals and no magics,
+# so neither exemption applies to it.
+
+[tool.ruff.lint.per-file-ignores]
+# The ONE exemption in tests/, and it is a per-FILE ignore, which the notebooks could not use.
+# tests/_fakes.py re-creates the namespace the fixtures notebook had after `%run olaf`: a star
+# import of the runtime, so the ported fakes reference the lib's public names unqualified, exactly
+# as they did in Fabric. Enumerating that surface would be a second copy of the runtime's __all__,
+# drifting silently the first time the runtime grows a name.
+"tests/_fakes.py" = ["F403", "F405"]
+
+[tool.ruff.format]
+# Defaults (double quotes, trailing commas) — explicit block documents intent.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
+
+[tool.coverage.run]
+branch = true
+source = ["_olaf_runtime"]
+
+[tool.coverage.report]
+show_missing = true
+# The 100% branch gate the retired scripts/coverage_run.py enforced (FAIL_UNDER = 100.0), now a
+# property of `pytest --cov`: the measured surface is tests/_olaf_runtime.py, extracted from
+# notebooks/olaf.ipynb by tests/conftest.py on every run.
+fail_under = 100

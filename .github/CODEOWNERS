@@ -1,0 +1,3 @@
+# Every path: review by the maintainer. A CODEOWNERS entry is what lets branch
+# protection require a maintainer review before merge.
+* @kengio

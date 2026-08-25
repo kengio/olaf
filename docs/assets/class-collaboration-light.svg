@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 634" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Class collaboration: OLAF sits in the centre and delegates to Deployment and Audit. Deployment uses Generate, DAR, Log, Target, TableSchema, Member, FabricClient and Hash; Audit shares FabricClient and Hash. Generate uses RLS, CLS, Catalog, ScopePath and Parse; DAR uses RLS, ScopePath and Parse; Catalog uses ScopePath and Parse; Member uses Parse."><title>Class collaboration: OLAF sits in the centre and delegates to Deployment and Audit. Deployment uses Generate, DAR, Log, Target, TableSchema, Member, FabricClient and Hash; Audit shares FabricClient and Hash. Generate uses RLS, CLS, Catalog, ScopePath and Parse; DAR uses RLS, ScopePath and Parse; Catalog uses ScopePath and Parse; Member uses Parse.</title>
+  <defs>
+    <marker id="pa" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a94a6"/></marker>
+  </defs>
+  <style>
+    .box{stroke-width:2}
+    .t{font-size:13px;font-weight:700}
+    .ln{stroke:#8a94a6;stroke-width:1.6;fill:none;stroke-dasharray:5 4;opacity:.85}
+    .cap{font-size:11px;fill:#5b6472}
+  </style>
+  <path class="ln" d="M466 84 H370" marker-end="url(#pa)"/>
+  <path class="ln" d="M594 84 H709" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H72 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H180 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H268 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H360 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H478 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H608 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H744 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M300 108 V134 H876 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M762 108 V143 H744 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M762 108 V143 H876 V236" marker-end="url(#pa)"/>
+  <path class="ln" d="M72 284 V310 H120 V396" marker-end="url(#pa)"/>
+  <path class="ln" d="M72 284 V310 H244 V396" marker-end="url(#pa)"/>
+  <path class="ln" d="M72 284 V310 H340 V396" marker-end="url(#pa)"/>
+  <path class="ln" d="M72 284 V310 H150 V540" marker-end="url(#pa)"/>
+  <path class="ln" d="M72 284 V310 H300 V540" marker-end="url(#pa)"/>
+  <path class="ln" d="M180 284 V319 H244 V396" marker-end="url(#pa)"/>
+  <path class="ln" d="M180 284 V319 H150 V540" marker-end="url(#pa)"/>
+  <path class="ln" d="M180 284 V319 H300 V540" marker-end="url(#pa)"/>
+  <path class="ln" d="M120 444 V488 H150 V540" marker-end="url(#pa)"/>
+  <path class="ln" d="M120 444 V488 H300 V540" marker-end="url(#pa)"/>
+  <path class="ln" d="M608 284 V337 H300 V540" marker-end="url(#pa)"/>
+  <rect class="box" x="230" y="60" width="140" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="300" y="88" text-anchor="middle" fill="#3a4a8c">Deployment</text>
+  <rect class="box" x="466" y="60" width="128" height="48" rx="13" fill="#e9e6fb" stroke="#8b7fd0" stroke-width="2.5"/>
+  <text class="t" x="530" y="88" text-anchor="middle" fill="#4a3f8c" font-size="15">OLAF</text>
+  <rect class="box" x="709" y="60" width="106" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="762" y="88" text-anchor="middle" fill="#3a4a8c">Audit</text>
+  <rect class="box" x="18" y="236" width="108" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="72" y="264" text-anchor="middle" fill="#3a4a8c">Generate</text>
+  <rect class="box" x="145" y="236" width="70" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="180" y="264" text-anchor="middle" fill="#3a4a8c">DAR</text>
+  <rect class="box" x="233" y="236" width="70" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="268" y="264" text-anchor="middle" fill="#3a4a8c">Log</text>
+  <rect class="box" x="317" y="236" width="86" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="360" y="264" text-anchor="middle" fill="#3a4a8c">Target</text>
+  <rect class="box" x="417" y="236" width="122" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="478" y="264" text-anchor="middle" fill="#3a4a8c">TableSchema</text>
+  <rect class="box" x="560" y="236" width="96" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="608" y="264" text-anchor="middle" fill="#3a4a8c">Member</text>
+  <rect class="box" x="683" y="236" width="122" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="744" y="264" text-anchor="middle" fill="#3a4a8c">FabricClient</text>
+  <rect class="box" x="838" y="236" width="76" height="48" rx="10" fill="#eef1fc" stroke="#7c8fd6"/>
+  <text class="t" x="876" y="264" text-anchor="middle" fill="#3a4a8c">Hash</text>
+  <rect class="box" x="74" y="396" width="92" height="48" rx="10" fill="#f6f7f9" stroke="#9aa4b2"/>
+  <text class="t" x="120" y="424" text-anchor="middle" fill="#4a5262">Catalog</text>
+  <rect class="box" x="209" y="396" width="70" height="48" rx="10" fill="#f6f7f9" stroke="#9aa4b2"/>
+  <text class="t" x="244" y="424" text-anchor="middle" fill="#4a5262">RLS</text>
+  <rect class="box" x="305" y="396" width="70" height="48" rx="10" fill="#f6f7f9" stroke="#9aa4b2"/>
+  <text class="t" x="340" y="424" text-anchor="middle" fill="#4a5262">CLS</text>
+  <rect class="box" x="96" y="540" width="108" height="48" rx="10" fill="#f6f7f9" stroke="#9aa4b2"/>
+  <text class="t" x="150" y="568" text-anchor="middle" fill="#4a5262">ScopePath</text>
+  <rect class="box" x="260" y="540" width="80" height="48" rx="10" fill="#f6f7f9" stroke="#9aa4b2"/>
+  <text class="t" x="300" y="568" text-anchor="middle" fill="#4a5262">Parse</text>
+  <text class="cap" x="1044" y="620" text-anchor="end">dashed = uses / delegates to</text>
+</svg>
