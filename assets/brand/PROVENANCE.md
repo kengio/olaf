@@ -9,8 +9,8 @@ personal attribution or private working files.
 |---|---|---|
 | `olaf-logo.png` | `68f46d4054cce80b23f5c8255f5f0c2c306da116adbbe3c094ca0ec0d78efa28` | 512 × 512 px |
 | `olaf-mascot.png` | `3078c87bd9d9a74030fb73df034f17380d01387a8dde29edf6dca5aa19740f9c` | 512 × 512 px |
-| `olaf-lockup-light.png` | `f005a1b558ae309a05aacf59097a57022d91f86c45f146469f68db213dc29325` | 1280 × 640 px |
-| `olaf-lockup-dark.png` | `7ad09f4cf95564e35a5270050ae8dda75553dae1c8f8aa6b892679527cf6b94e` | 1280 × 640 px |
+| `olaf-banner-light.png` | `f005a1b558ae309a05aacf59097a57022d91f86c45f146469f68db213dc29325` | 1280 × 640 px |
+| `olaf-banner-dark.png` | `7ad09f4cf95564e35a5270050ae8dda75553dae1c8f8aa6b892679527cf6b94e` | 1280 × 640 px |
 | `olaf-social-preview.png` | `c5d1fec2a4925a5babad59920c0fd5b475778d288c6285efee45a6ac12ce0e0e` | 1280 × 640 px |
 
 ## Origin and transformations

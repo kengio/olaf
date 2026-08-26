@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/olaf-lockup-dark.png">
-    <img src="assets/brand/olaf-lockup-light.png" alt="OLAF — OneLake Access Framework. Arctic owl shield mark and wordmark." width="620">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/olaf-banner-dark.png">
+    <img src="assets/brand/olaf-banner-light.png" alt="OLAF — OneLake Access Framework. Arctic owl shield mark and wordmark." width="620">
   </picture>
 </p>
 

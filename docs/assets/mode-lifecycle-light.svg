@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 248" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Mode lifecycle for the single self-contained olaf runtime notebook: setup once, then the routine loop configure, generate, plan, a manual review gate, then apply (full replace by default; keep_unmanaged=true keeps unmanaged roles) — looping back on every config edit. rollback restores a prior config version and re-runs generate, plan and apply. validate, show and trace are read-only at any time (no log; validate dry-runs generate's checks with zero writes). One notebook dispatches every mode via the mode parameter — there are no separate persona notebooks."><title>Mode lifecycle for the single self-contained olaf runtime notebook: setup once, then the routine loop configure, generate, plan, a manual review gate, then apply (full replace by default; keep_unmanaged=true keeps unmanaged roles) — looping back on every config edit. rollback restores a prior config version and re-runs generate, plan and apply. validate, show and trace are read-only at any time (no log; validate dry-runs generate's checks with zero writes). One notebook dispatches every mode via the mode parameter — there are no separate persona notebooks.</title>
+  <defs>
+    <marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a94a6"/>
+    </marker>
+  </defs>
+  <style>
+    .b{stroke-width:1.8;rx:8}
+    .t{font-size:13px;font-weight:700}
+    .ln{stroke:#8a94a6;stroke-width:1.8;fill:none}
+    .lp{stroke:#8a94a6;stroke-width:1.6;fill:none;stroke-dasharray:5 4}
+    .cap{fill:#8a94a6;font-size:11px;font-style:italic}
+    .note{font-size:11.5px;font-weight:600;font-style:italic;fill:#5a6472}
+  </style>
+
+  <!-- ONE self-contained notebook — no persona-template lanes. The mode nodes below are
+       all dispatched from olaf.ipynb via the `mode` parameter (see footer note). -->
+
+  <!-- routine loop OVER THE TOP: apply → configure (caption above it, nothing below to overlap) -->
+  <text class="cap" x="457" y="18" text-anchor="middle">every config edit — the routine loop</text>
+  <path class="lp" d="M730 54 L730 40 Q730 34 724 34 L190 34 Q184 34 184 40 L184 58" marker-end="url(#ma)"/>
+
+  <!-- main flow: setup → configure → generate → plan → gate → apply -->
+  <g>
+    <rect class="b" x="18"  y="60" width="84" height="46" rx="8" fill="#eef1fc" stroke="#7c8fd6"/>
+    <text class="t" x="60"  y="88" text-anchor="middle" fill="#3a4a8c">setup</text>
+    <rect class="b" x="132" y="60" width="104" height="46" rx="8" fill="#eef1fc" stroke="#7c8fd6"/>
+    <text class="t" x="184" y="88" text-anchor="middle" fill="#3a4a8c">configure</text>
+    <rect class="b" x="266" y="60" width="104" height="46" rx="8" fill="#eef1fc" stroke="#7c8fd6"/>
+    <text class="t" x="318" y="88" text-anchor="middle" fill="#3a4a8c">generate</text>
+    <rect class="b" x="400" y="60" width="84" height="46" rx="8" fill="#eef1fc" stroke="#7c8fd6"/>
+    <text class="t" x="442" y="88" text-anchor="middle" fill="#3a4a8c">plan</text>
+    <rect class="b" x="514" y="60" width="116" height="46" rx="8" fill="#f7f7f9" stroke="#9aa4b2" stroke-dasharray="5 4"/>
+    <text class="t" x="572" y="82" text-anchor="middle" fill="#5a6472" font-size="12">Review Gate</text>
+    <text x="572" y="98" text-anchor="middle" fill="#8a94a6" font-size="9.5">human approval</text>
+    <rect class="b" x="660" y="54" width="140" height="58" rx="8" fill="#d9f2ea" stroke="#3fae8e"/>
+    <text class="t" x="730" y="78" text-anchor="middle" fill="#237a5c">apply</text>
+    <text x="730" y="94" text-anchor="middle" fill="#3a7a5c" font-size="9.5">full replace</text>
+    <text x="730" y="105" text-anchor="middle" fill="#8a94a6" font-size="8.5">keep_unmanaged → upsert</text>
+  </g>
+  <path class="ln" d="M102 83 L 130 83" marker-end="url(#ma)"/>
+  <path class="ln" d="M236 83 L 264 83" marker-end="url(#ma)"/>
+  <path class="ln" d="M370 83 L 398 83" marker-end="url(#ma)"/>
+  <path class="ln" d="M484 83 L 512 83" marker-end="url(#ma)"/>
+  <path class="ln" d="M630 83 L 658 83" marker-end="url(#ma)"/>
+
+  <!-- rollback: restore prior config → re-runs generate -->
+  <text class="cap" x="383" y="148" text-anchor="start">→ re-runs generate · plan · apply</text>
+  <rect class="b" x="266" y="168" width="104" height="46" rx="8" fill="#fcefd6" stroke="#d99a45"/>
+  <text class="t" x="318" y="189" text-anchor="middle" fill="#9c6a2a">rollback</text>
+  <text x="318" y="205" text-anchor="middle" fill="#9c6a2a" font-size="9.5">restore prior config</text>
+  <path class="ln" d="M318 168 L 318 108" marker-end="url(#ma)"/>
+
+  <!-- validate + show + trace: read-only, zero writes -->
+  <rect class="b" x="514" y="170" width="286" height="48" rx="8" fill="#eeeef2" stroke="#9aa4b2"/>
+  <text class="t" x="657" y="192" text-anchor="middle" fill="#4a5262" font-size="12">validate · show · trace</text>
+  <text x="657" y="207" text-anchor="middle" fill="#8a94a6" font-size="9.5">read-only — no writes, no log</text>
+
+  <!-- footer: one notebook dispatches every mode -->
+  <text class="note" x="410" y="238" text-anchor="middle">One self-contained notebook — olaf — dispatches every mode via the `mode` parameter.</text>
+</svg>
