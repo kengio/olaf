@@ -6,40 +6,7 @@ version `1.0.0` maps to release tag `v1.0.0`.
 
 ## [Unreleased]
 
-### Added
-
-- The five diagram pairs the release build used to hold back — apply semantics, destructive
-  utilities, mode lifecycle, pipeline, pipeline branching — and `scripts/gen-olaf-diagrams.py`,
-  which generates them. They were withheld because no published document referenced them, never
-  because a check objected: the release scanner reported no finding against any of them.
-- `README.md` regained **What is OneLake security?**, **Why OLAF?** and a **Roadmap** checklist,
-  along with the Arctic Owl mascot. A second badge row states what CI proves and what OLAF runs on.
-- A roadmap entry for a local authoring tool that would validate and build a config against a real
-  workspace from a developer machine, with the conditions that block it.
-- The example notebooks are complete again: `olaf_cookbook` carries 33 code cells and
-  `olaf_master_workflow` the full stage-by-stage pipeline, instead of 3 each.
-
-### Changed
-
-- **This repository is now the only one.** Development happened in a private repository whose
-  history was withheld from an orphan-root release commit. Everything worth keeping is here, so the
-  subtraction machinery — an exclude list, a mirror-back guard against silently reverting anything
-  merged here first — has no remaining purpose and does not travel with it.
-- The masthead art is renamed `olaf-banner-light.png` / `olaf-banner-dark.png`. It was
-  `olaf-lockup-*`, and overwriting those files left every cache serving the previous image from an
-  unchanged URL. A new name is the only thing that reliably invalidates it.
-- The social preview carries the wordmark, the project name and the plan → review → apply sequence,
-  where it was previously the logo on a plain ground.
-
-### Fixed
-
-- `olaf_master_workflow` read `deleted` from the apply envelope, a key the runtime renamed to
-  `omitted_role_candidates`. It printed `deleted 0` on every run regardless of what the payload
-  actually left out.
-- The same notebook sorted per-role verdicts on `{"delete": 0, ...}`. The runtime emits `omit` and
-  never `delete`, so omitted roles fell to the default rank and sorted last under a heading that
-  promised them first.
-- `README.md` no longer pins a version number in prose; the release badge reads the tag.
+No changes yet.
 
 ## [1.0.0] - 2026-08-26
 
@@ -57,13 +24,26 @@ Preview and is not presented as a production contract:
 - Saved-plan, drift, target-identity, mapping-provenance, and conditional-write
   guards with durable prepared intent and recovery pointers.
 - A fail-closed control-data boundary: reserved paths, bounded ETag-bearing DAR
-  snapshots, per-run workspace isolation attestation, and a PII-free incident
-  sentinel for every sensitive write.
+  snapshots, and a PII-free incident sentinel for every sensitive write. The per-run
+  workspace-isolation attestation is **optional** and sits outside that boundary:
+  OLAF records it as `attested` or `unknown` and never gates on it.
 - Engine-explicit effective-access reporting for Spark, Direct Lake, and SQL
   analytics endpoint CLS semantics.
+- Grant provenance reported at both ends — `first_applied`/`first_granted_by` and
+  `last_applied`/`last_granted_by` — because the log cannot see a role removed
+  outside OLAF, so no single timestamp can claim continuous access.
+- Worked examples: `olaf_cookbook` covers every facade call with expected output
+  shapes, and `olaf_master_workflow` runs the deployment one stage per cell, each
+  stage's result deciding the next.
+- Pipeline wrappers (`olaf_runner`) for one activity per mode.
+- Architecture, data-model, mode-lifecycle, apply-semantics and destructive-utility
+  diagrams, with the generator that produces them.
 - Fixture-based pytest coverage, notebook structure checks, formatting, internal
   link checks, and repository privacy/secret hygiene gates.
 - Public governance files, a private vulnerability-reporting route (when enabled),
   incident-response guidance, and privacy-preserving maintainer identity policy.
 - Official-source-backed documentation that separates OLAF behavior from Microsoft
   platform guarantees and records the same-lakehouse/non-transactional limitations.
+- A published roadmap whose every item names the specific condition blocking it,
+  including a local authoring tool that would validate a config against a real
+  workspace from a developer machine.
