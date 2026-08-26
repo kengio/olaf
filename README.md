@@ -11,24 +11,23 @@
 
 <p align="center">
   <a href="https://github.com/kengio/olaf/actions/workflows/test.yml"><img src="https://github.com/kengio/olaf/actions/workflows/test.yml/badge.svg" alt="tests"></a>
+  <a href="docs/testing.md"><img src="https://img.shields.io/badge/coverage-100%25%20(fixtures)-1E3A8A" alt="Coverage: 100% against in-memory fixtures"></a>
+  <a href="https://github.com/kengio/olaf/tags"><img src="https://img.shields.io/github/v/tag/kengio/olaf?label=release&color=1E3A8A" alt="Latest release tag"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-1E3A8A" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/status-community%20Preview-FB923C" alt="Status: community Preview">
 </p>
 
-> [!IMPORTANT]
-> **OLAF v1.0.0 is an independent community Preview for evaluation and
-> development, not a production-ready security product.** Its mutating path
-> depends on Microsoft's bulk Data Access Roles `PUT`, which is officially
-> documented as **Preview** and not recommended for production use.
-> [Official endpoint status](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles)
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-0EA5E9" alt="Python 3.11, 3.12 and 3.13">
+  <img src="https://img.shields.io/badge/Fabric-Runtime%201.3%20%2F%20Spark%203.5%2B-0EA5E9" alt="Microsoft Fabric Runtime 1.3 / Spark 3.5 or newer">
+  <img src="https://img.shields.io/badge/dependencies-hash--pinned-0EA5E9" alt="Dependencies installed with --require-hashes">
+  <img src="https://img.shields.io/badge/lint-ruff-0EA5E9" alt="Linted and formatted with ruff">
+</p>
 
-> [!CAUTION]
-> OLAF stores principal identifiers and authorization/recovery state in control
-> tables and under `Files/security`. Sensitive modes are disabled by default and
-> require a clean DAR snapshot with an ETag. The per-run workspace isolation
-> attestation is optional — OLAF records it as `attested` or `unknown` and
-> never gates on it. Complete the external access review **before uploading a
-> real workbook**. Start with [Protecting OLAF control data](docs/control-data-security.md).
+> [!IMPORTANT]
+> **An independent community Preview for evaluation and development, not a production-ready
+> security product.** Its mutating path uses Microsoft's bulk Data Access Roles `PUT`, which
+> Microsoft documents as [Preview and not recommended for production](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
 
 **OLAF — OneLake Access Framework** is a plan → review → apply workflow for
 Microsoft Fabric OneLake data access roles. It is one self-contained Fabric
@@ -39,6 +38,46 @@ OLAF is not affiliated with, endorsed by, sponsored by, or supported by Microsof
 The product names above are used only to describe interoperability. See
 [Microsoft's Trademark and Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks)
 and the project's [platform contract](docs/platform-contract.md).
+
+## What is OneLake security?
+
+[OneLake security](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model)
+is Microsoft Fabric's native, data-plane access control: you define **security roles on the data
+itself** (a lakehouse's tables, folders, rows, columns) and OneLake enforces them everywhere — instead
+of re-implementing security per engine with T-SQL views, workspace boundaries, or report-side filters.
+
+- **Role-based access** — grant Read per table (`/Tables/schema/table`) or folder (`/Files/...`);
+  users with no role see nothing (**deny by default**).
+  [Create and manage roles →](https://learn.microsoft.com/en-us/fabric/onelake/security/create-manage-roles)
+- **Row-level security (RLS)** — SQL-like predicates per table per role (static values; the
+  OneLake-supported operator subset — `= <> > >= < <= IN NOT AND OR IS BLANK NULL TRUE FALSE`,
+  rule C9). A member of several roles gets the **union** of what they allow.
+  [Row-level security →](https://learn.microsoft.com/en-us/fabric/onelake/security/row-level-security)
+- **Column-level security (CLS)** — hide specific columns per role.
+  [Column-level security →](https://learn.microsoft.com/en-us/fabric/onelake/security/column-level-security)
+- **Entra-native membership** — role members are Entra users, **security groups**, or service
+  principals; membership changes happen in Entra, no sync tables to maintain.
+- **One definition, every engine** — enforced across the SQL analytics endpoint, Spark, and Direct
+  Lake semantic models (Power BI), so reports and notebooks see the same filtered data.
+- **Granular write** — separate ReadWrite roles for scoped write access (RLS/CLS don't apply there).
+
+Worth knowing: roles carrying RLS/CLS are read-only; workspace Admins/Members/Contributors bypass
+OneLake security (it governs consumers); role definitions are per lakehouse.
+
+## Why OLAF?
+
+OneLake security provides the enforcement layer. OLAF makes operating that layer **reviewable,
+repeatable, and easier to govern** when deployments grow beyond a handful of roles and tables.
+
+| What you need | What OLAF does |
+|---|---|
+| **Know what will change** | `plan` shows every role and grant that will be created, updated, or omitted from the submitted payload. |
+| **Prevent an unreviewed write** | `apply` requires a saved plan and refuses stale or drifted state. |
+| **Catch risky configuration early** | Validation blocks common RLS/CLS, predicate, casing, and multi-role exposure mistakes before deployment. |
+| **Keep the runtime simple** | One unchanged notebook serves every project; configuration and runtime parameters carry project intent. |
+| **Explain what happened** | Plan and apply are linked in the audit log with who, what, when, and the relevant configuration state. |
+
+*Full rule-by-rule detail → [docs/architecture.md](docs/architecture.md).*
 
 ## What OLAF does
 
@@ -58,6 +97,14 @@ and [SQL endpoint enforcement guidance](https://learn.microsoft.com/en-us/fabric
 
 ## Before you start
 
+> [!CAUTION]
+> OLAF stores principal identifiers and authorization/recovery state in control
+> tables and under `Files/security`. Sensitive modes are disabled by default and
+> require a clean DAR snapshot with an ETag. The per-run workspace isolation
+> attestation is optional — OLAF records it as `attested` or `unknown` and
+> never gates on it. Complete the external access review **before uploading a
+> real workbook**. Start with [Protecting OLAF control data](docs/control-data-security.md).
+
 - Use Microsoft Fabric Runtime 1.3 / Spark 3.5 or newer, then verify the selected
   runtime and bundled package versions in your Fabric environment. Microsoft
   publishes the [runtime lifecycle](https://learn.microsoft.com/en-us/fabric/data-engineering/lifecycle)
@@ -68,7 +115,7 @@ and [SQL endpoint enforcement guidance](https://learn.microsoft.com/en-us/fabric
   and the [bulk DAR authorization contract](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
 - Treat the same-lakehouse layout as a trusted-administrator boundary, not
   cryptographic or transactional isolation. If that threat model is unacceptable,
-  do not import real principal data or run sensitive modes in v1.0.0.
+  do not import real principal data or run sensitive modes in this Preview.
 
 ## Quick start
 
@@ -210,6 +257,34 @@ partial or ambiguous operation. Follow
 - [API reference](docs/api-reference.md)
 - [Testing guide](docs/testing.md)
 - [Roadmap](docs/roadmap.md)
+
+## Roadmap
+
+Options, not promises or release dates. Each is blocked on a specific, checkable condition, and none
+may weaken the control-data boundary or turn an observed service behavior into a platform contract.
+**[docs/roadmap.md](docs/roadmap.md)** carries the detail and the official sources behind each one.
+
+- [ ] **Differential apply** — per-role writes instead of one bulk `PUT`, so an apply touches only
+      what changed. *Blocked on a stable, concurrency-safe official contract: the single-role
+      endpoints are themselves Preview, and the design needs documented precondition behavior plus a
+      recovery model for a partially completed role set.*
+- [ ] **RLS + CLS cross-grant detection at `generate`** — closing rule C5's blind spot, where a user
+      arrives through a group on one side and directly on the other. *The conservative rule stays
+      until evidence justifies otherwise; OLAF deliberately does not call Microsoft Graph.*
+- [ ] **Scheduled drift detection** — a gate an adopter schedules rather than wires themselves.
+      *Must stay read-only, separate identity drift from policy drift, and keep real principal values
+      out of CI logs.*
+- [ ] **Local authoring tool** — validate and build a config from a developer machine against a
+      real workspace, so table names, member resolution and rule violations surface while the
+      config is still being written instead of at `generate`. *Blocked on where real identifiers
+      and a Fabric token are allowed to live once they leave the Fabric boundary; validation only,
+      never a second write path.*
+- [ ] **Separate control store** — a separately secured store or independently managed keys, for
+      organizations that cannot accept v1's trusted-administrator boundary. *Not a minimal v1 change.*
+
+**Not planned:** replacing Fabric enforcement with an OLAF query layer · workspace and item RBAC ·
+calling Microsoft Graph in v1 · claiming production readiness while the required endpoint is Preview
+— [the full list and why](docs/roadmap.md#not-planned).
 
 ## Repository layout
 

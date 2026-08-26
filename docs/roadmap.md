@@ -37,6 +37,39 @@ OLAF deliberately does not call Microsoft Graph. That is a project design choice
 not a claim that Graph tokens are universally unavailable:
 [NotebookUtils token audiences](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-credentials#get-token).
 
+## Local authoring tool — validate and build config against a real workspace
+
+**Status: planned; blocked on where real identifiers are allowed to live.**
+
+Today a config is authored blind. The workbook is filled in against what the author
+believes the lakehouse contains, and the first time anything checks it against reality
+is `generate` inside Fabric. A tool that runs on a developer machine, authenticates
+with Fabric credentials, and reads the live workspace could resolve table and column
+names, check member principals resolve, and surface rule violations while the config
+is still being written — a `plan` for the config itself, before a notebook is involved.
+
+What has to be settled first is not the API surface. It is that such a tool moves real
+tenant data onto a laptop:
+
+- **Credentials.** It would hold or broker a token with `OneLake.ReadWrite.All` scope
+  outside the Fabric boundary. The token, its cache, and its lifetime all become the
+  tool's responsibility, and a stolen laptop becomes a DAR-write capability. Read-only
+  scope for authoring is the obvious first constraint; whether that is sufficient to
+  build a config is not yet established.
+- **Real identifiers on disk.** Resolving members means reading real principal object
+  ids and display names. v1's whole control-data posture says do not put those where
+  they are not governed — see [Protecting OLAF control data](control-data-security.md).
+  A local cache, a shell history, an editor's undo file and a crash dump are all places
+  they would land by default.
+- **What it must never become.** An authoring tool reads and validates. It must not
+  grow a write path to the DAR collection, because that would move the reviewed
+  plan → approve → apply sequence off the audited runtime and onto a machine with no
+  audit trail. Validation only, with the deployment path unchanged.
+
+Until those are answered the honest position is that authoring stays in the workbook and
+validation stays in `generate` and `validate`, which already run every rule with zero
+writes.
+
 ## Scheduled drift detection
 
 **Status: candidate automation after the read-only contract is stable.**
