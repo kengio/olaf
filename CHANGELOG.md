@@ -6,7 +6,40 @@ version `1.0.0` maps to release tag `v1.0.0`.
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- The five diagram pairs the release build used to hold back — apply semantics, destructive
+  utilities, mode lifecycle, pipeline, pipeline branching — and `scripts/gen-olaf-diagrams.py`,
+  which generates them. They were withheld because no published document referenced them, never
+  because a check objected: the release scanner reported no finding against any of them.
+- `README.md` regained **What is OneLake security?**, **Why OLAF?** and a **Roadmap** checklist,
+  along with the Arctic Owl mascot. A second badge row states what CI proves and what OLAF runs on.
+- A roadmap entry for a local authoring tool that would validate and build a config against a real
+  workspace from a developer machine, with the conditions that block it.
+- The example notebooks are complete again: `olaf_cookbook` carries 33 code cells and
+  `olaf_master_workflow` the full stage-by-stage pipeline, instead of 3 each.
+
+### Changed
+
+- **This repository is now the only one.** Development happened in a private repository whose
+  history was withheld from an orphan-root release commit. Everything worth keeping is here, so the
+  subtraction machinery — an exclude list, a mirror-back guard against silently reverting anything
+  merged here first — has no remaining purpose and does not travel with it.
+- The masthead art is renamed `olaf-banner-light.png` / `olaf-banner-dark.png`. It was
+  `olaf-lockup-*`, and overwriting those files left every cache serving the previous image from an
+  unchanged URL. A new name is the only thing that reliably invalidates it.
+- The social preview carries the wordmark, the project name and the plan → review → apply sequence,
+  where it was previously the logo on a plain ground.
+
+### Fixed
+
+- `olaf_master_workflow` read `deleted` from the apply envelope, a key the runtime renamed to
+  `omitted_role_candidates`. It printed `deleted 0` on every run regardless of what the payload
+  actually left out.
+- The same notebook sorted per-role verdicts on `{"delete": 0, ...}`. The runtime emits `omit` and
+  never `delete`, so omitted roles fell to the default rank and sorted last under a heading that
+  promised them first.
+- `README.md` no longer pins a version number in prose; the release badge reads the tag.
 
 ## [1.0.0] - 2026-08-26
 

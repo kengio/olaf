@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 590" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Pipeline: onelake_security_config plus onelake_security_member both feed generate, which resolves wildcards and member names to objectIds into the onelake_security_mapping lock-file; plan compares the mapping with the current live state; on no change it skips, on a change apply writes to live OneLake security."><title>Pipeline: onelake_security_config plus onelake_security_member both feed generate, which resolves wildcards and member names to objectIds into the onelake_security_mapping lock-file; plan compares the mapping with the current live state; on no change it skips, on a change apply writes to live OneLake security.</title>
+  <defs>
+    <marker id="pad" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a94a6"/>
+    </marker>
+  </defs>
+  <style>
+    .box{stroke-width:2}
+    .t{font-size:14px;font-weight:700}
+    .s{font-size:11px;fill:#9aa4b2}
+    .ln{stroke:#8a94a6;stroke-width:2;fill:none}
+    .step{fill:#d0d6e0;font-size:12.5px;font-weight:700}
+    .sub{fill:#8a94a6;font-size:11px}
+    .plus{fill:#8a94a6;font-size:30px;font-weight:700}
+  </style>
+
+  <!-- config + member -->
+  <rect class="box" x="55" y="34" width="250" height="72" rx="11" fill="#1e2540" stroke="#7c8fd6"/>
+  <text class="t" x="180" y="66" text-anchor="middle" fill="#aeb9f0">onelake_security_config</text>
+  <text class="s" x="180" y="87" text-anchor="middle">your logic · roles · scopes · RLS/CLS</text>
+
+  <text class="plus" x="360" y="82" text-anchor="middle">+</text>
+
+  <rect class="box" x="415" y="34" width="250" height="72" rx="11" fill="#2a1f40" stroke="#a56fd6"/>
+  <text class="t" x="540" y="66" text-anchor="middle" fill="#cba6f0">onelake_security_member</text>
+  <text class="s" x="540" y="87" text-anchor="middle">preloaded · name → objectId</text>
+
+  <!-- generate: config + member drop straight down and enter the mapping sides — center stays clear for the label -->
+  <path class="ln" d="M180 106 L180 226 Q180 236 190 236 L234 236" marker-end="url(#pad)"/>
+  <path class="ln" d="M540 106 L540 226 Q540 236 530 236 L486 236" marker-end="url(#pad)"/>
+  <text class="step" x="360" y="150" text-anchor="middle">generate</text>
+  <text class="sub" x="360" y="166" text-anchor="middle">resolve wildcards + names → objectIds</text>
+
+  <!-- mapping -->
+  <rect class="box" x="235" y="204" width="250" height="64" rx="11" fill="#12332a" stroke="#4fbf9a"/>
+  <text class="t" x="360" y="234" text-anchor="middle" fill="#7fe0c0">onelake_security_mapping</text>
+  <text class="s" x="360" y="254" text-anchor="middle">machine lock-file · resolved + frozen</text>
+
+  <!-- plan: label to the RIGHT of the spine arrow -->
+  <path class="ln" d="M360 268 L 360 320" marker-end="url(#pad)"/>
+  <text class="step" x="392" y="290" text-anchor="start">plan</text>
+  <text class="sub" x="392" y="306" text-anchor="start">compare mapping vs live state</text>
+
+  <!-- change? diamond -->
+  <polygon class="box" points="360,320 432,366 360,412 288,366" fill="#26262e" stroke="#8a94a6"/>
+  <text class="t" x="360" y="371" text-anchor="middle" fill="#d0d6e0" font-size="14">change?</text>
+
+  <!-- No → Skip (horizontal, label ABOVE the line) -->
+  <path class="ln" d="M432 366 L 556 366" marker-end="url(#pad)"/>
+  <text class="sub" x="494" y="358" text-anchor="middle">No</text>
+  <rect class="box" x="558" y="340" width="112" height="52" rx="11" fill="#1a1d24" stroke="#6b7280"/>
+  <text class="t" x="614" y="364" text-anchor="middle" fill="#aab2c0" font-size="13">Skip</text>
+  <text class="s" x="614" y="381" text-anchor="middle" font-size="10">no change · exit 0</text>
+
+  <!-- Yes → apply (vertical, label to the RIGHT) -->
+  <path class="ln" d="M360 412 L 360 470" marker-end="url(#pad)"/>
+  <text class="step" x="392" y="446" text-anchor="start">Yes → apply</text>
+
+  <!-- Live -->
+  <rect class="box" x="175" y="472" width="370" height="74" rx="13" fill="#123a28" stroke="#3fbf7a" stroke-width="2.5"/>
+  <text class="t" x="360" y="505" text-anchor="middle" fill="#7fe0a8" font-size="16">Live OneLake security</text>
+  <text class="s" x="360" y="527" text-anchor="middle">roles enforced on the lakehouse · every run audited</text>
+</svg>

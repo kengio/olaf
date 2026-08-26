@@ -108,7 +108,7 @@ through color alone; pair status colors with text or an icon.
 |---|---|
 | `olaf-logo.png` | Primary mark — avatars, docs headers, badges ≥ 64px |
 | `olaf-mascot.png` | Mascot artwork — README hero, launch and community material |
-| `olaf-lockup-light.png` / `olaf-lockup-dark.png` | Masthead lockups per color scheme |
+| `olaf-banner-light.png` / `olaf-banner-dark.png` | Masthead banners per color scheme |
 | `olaf-social-preview.png` | Repository social preview — OLAF mark only, without third-party logos or product icons |
 
 ### Clear space
@@ -149,8 +149,8 @@ See [Legal separation](#legal-separation) below for the identity/affiliation rul
 
 ## README usage
 
-1. Lead with the masthead lockup (`assets/brand/olaf-lockup-light.png` /
-   `olaf-lockup-dark.png` via a `<picture>` element).
+1. Lead with the masthead banner (`assets/brand/olaf-banner-light.png` /
+   `olaf-banner-dark.png` via a `<picture>` element).
 2. Follow with one concrete product sentence.
 3. Show the plan → review → apply promise before implementation detail.
 4. Keep the quick start within the first two screenfuls.
