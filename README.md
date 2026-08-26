@@ -308,6 +308,15 @@ General questions and sanitized bug reports belong in
 [GitHub issues](https://github.com/kengio/olaf/issues). See [SUPPORT.md](SUPPORT.md)
 and [CONTRIBUTING.md](CONTRIBUTING.md).
 
+<p align="center">
+  <img src="assets/brand/olaf-mascot.png" alt="The OLAF Arctic Owl Sentinel — a crystalline owl holding a notebook that carries the OLAF shield crest and its padlock" width="260">
+</p>
+
+<p align="center">
+  <em>The Arctic Owl keeps watch over your lake — every change is seen, reviewed,<br>
+  and approved before it is submitted.</em>
+</p>
+
 ## License and identity
 
 Code, documentation, and project artwork are licensed under [MIT](LICENSE), with
