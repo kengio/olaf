@@ -1,6 +1,6 @@
 # Runbook — setup, config, and operations
 
-OLAF v1.0.0 is an independent community Preview for evaluation and development,
+OLAF v1.1.0 is an independent community Preview for evaluation and development,
 not a production-ready security product. Its mutating path depends on Microsoft's
 Preview bulk DAR endpoint:
 [Create or update data access roles](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
@@ -173,7 +173,7 @@ Before a real apply/reset, OLAF records prepared intent and a backup pointer. If
 operation becomes ambiguous, preserve the incident sentinel, prepared row, and backup.
 Stop later sensitive modes; do not automatically restore over a concurrent change.
 
-OLAF v1.0.0 has **no supported public backup-replay method**. Do not call
+OLAF v1.1.0 has **no supported public backup-replay method**. Do not call
 `FabricClient.put_roles()` directly from a public workflow and do not treat a backup
 pointer as a local file path. A low-level call bypasses the mandatory sentinel and
 control-data gates, and no high-level guarded recovery method exists yet.

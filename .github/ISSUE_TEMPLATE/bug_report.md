@@ -30,7 +30,7 @@ The shortest path you know. The most useful ingredients, sanitized:
 
 **Environment**
 
-- OLAF version (`__version__`, printed at load): e.g. 1.0.0
+- OLAF version (`__version__`, printed at load): e.g. 1.1.0
 - Where it ran: Fabric notebook / pipeline / the pytest suite locally
 - Python version, if running the suite locally
 

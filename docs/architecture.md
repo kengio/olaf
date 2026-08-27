@@ -1,6 +1,6 @@
 # Architecture — OneLake Access Framework
 
-OLAF v1.0.0 is an independent community Preview for evaluation and development,
+OLAF v1.1.0 is an independent community Preview for evaluation and development,
 not a production-ready security product. It turns an authored role × scope × rule
 matrix into reviewed Microsoft Fabric OneLake data access role (DAR) requests and
 audit evidence from a Fabric notebook. Its bulk DAR mutation dependency is officially
@@ -597,7 +597,7 @@ the release does not publish an exact-SHA live service result for constant predi
 
 The check asks whether a bareword appears outside string literals. It deliberately
 avoids interpreting keywords as columns. The contract is limited to ASCII identifiers;
-non-ASCII predicate identifiers are outside OLAF v1.0.0's supported authoring surface.
+non-ASCII predicate identifiers are outside OLAF v1.1.0's supported authoring surface.
 
 **Scope of that claim — ASCII only (known limitation).** The bareword test is `[A-Za-z_]`, so
 "bareword" means *ASCII* bareword. This never widens access; it can only over-reject. Any non-ASCII
@@ -762,7 +762,7 @@ Two consequences worth stating plainly:
 
 ### Limits (fail at generate/plan, not at apply)
 
-OLAF v1.0.0 snapshots the following compatibility ceilings from Microsoft's
+OLAF v1.1.0 snapshots the following compatibility ceilings from Microsoft's
 official limitations reviewed on 2026-08-22. They are volatile service values; check
 the current source before operation:
 [OneLake security limitations](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model#onelake-security-limitations).

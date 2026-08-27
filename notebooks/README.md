@@ -1,6 +1,6 @@
 # notebooks/
 
-**One self-contained runtime, plus three optional notebooks.** OLAF v1.0.0 is
+**One self-contained runtime, plus three optional notebooks.** OLAF v1.1.0 is
 an independent community Preview for evaluation and development. `olaf` is the only file you *need* —
 it's the whole tool a user or pipeline runs. `olaf_master_workflow` is the recommended starting
 point: the runtime driven end to end, one stage per cell. `olaf_runner` is the pipeline wrapper —

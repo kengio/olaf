@@ -3,7 +3,7 @@
 A one-stop index of everything under `docs/`. Start with the "Start here" row if you're new to
 the framework; the rest is reference material you'll come back to.
 
-OLAF v1.0.0 is an independent community Preview for evaluation and development.
+OLAF v1.1.0 is an independent community Preview for evaluation and development.
 Read the platform and control-data boundaries before using real principal data.
 
 ## Start here

@@ -4,7 +4,7 @@ OLAF changes authorization state and stores principal/access metadata. A defect 
 misconfiguration can grant unintended access, remove required access, or expose
 control data. Treat this policy as part of the operating contract.
 
-> **Release status:** OLAF v1.0.0 is an independent community Preview for
+> **Release status:** OLAF v1.1.0 is an independent community Preview for
 > evaluation and development, not a production-ready security product. The bulk
 > DAR mutation endpoint on which it depends is officially Preview:
 > [Microsoft REST reference](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
@@ -164,7 +164,7 @@ a platform guarantee:
 
 The same-lakehouse design is not cryptographic or transactional isolation. If the
 trusted-administrator and externally controlled sharing boundary is unacceptable,
-do not import real principal data or run sensitive modes in v1.0.0.
+do not import real principal data or run sensitive modes in v1.1.0.
 
 ## Operational recommendations
 

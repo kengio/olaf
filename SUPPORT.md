@@ -3,7 +3,7 @@
 Thanks for using OLAF. Here is where to take each kind of question, and what to
 honestly expect back.
 
-OLAF v1.0.0 is an independent community Preview for evaluation and development;
+OLAF v1.1.0 is an independent community Preview for evaluation and development;
 it is not a production support offering. Its mutating DAR endpoint is officially
 Preview: [Microsoft REST reference](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
 

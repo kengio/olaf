@@ -5,7 +5,7 @@ audit log, role backups, and review artifacts contain principal identifiers and
 authorization or recovery state. The reserved boundary is the four configured
 control-table paths plus the complete `/Files/security` subtree.
 
-OLAF v1.0.0 uses a fail-closed operating model for every sensitive write,
+OLAF v1.1.0 uses a fail-closed operating model for every sensitive write,
 including first setup, workbook import, generate, plan, apply, reset, rollback,
 and backup creation. These modes are disabled by default until the technical
 DAR check passes. The per-run operator attestation is recorded, never required.
@@ -79,7 +79,7 @@ Fabric REST. The operator-attestation model deliberately trusts authorized
 administrators and external access controls for the unobservable interval.
 
 Organizations that cannot accept that trusted-administrator boundary should not
-import real principal data or run sensitive modes in v1.0.0. Use a separately
+import real principal data or run sensitive modes in v1.1.0. Use a separately
 secured control store or wait for a design that provides the required isolation.
 
 ## Bootstrap sequence
