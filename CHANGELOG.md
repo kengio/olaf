@@ -35,6 +35,21 @@ No changes yet.
   caller inside or outside the framework. The repo states no Preview exemption from SemVer, so
   this note is the exemption.
 
+### Upgrade note
+
+- **The first `generate` after upgrading re-stamps the mapping, even on an unchanged config.** The
+  idempotent-skip fast path requires the stored `framework_version` to equal `__version__`, so on
+  the first run it does not match: `changed` is `True` rather than `False`, the status is `success`
+  rather than `skipped`, two log rows are written instead of one, and the mapping table is rewritten
+  with `framework_version` `1.1.0`. `config_hash` does not move — it hashes config rows only — and
+  the run after that skips again. A pipeline gated on `envelope["changed"]` will therefore re-plan
+  and re-apply once per deployment on upgrade. Nothing fails; both `success` and `skipped` exit
+  normally.
+- `mapping_hash` projects to the mapping columns and excludes provenance, so it is unchanged: a
+  saved-plan row stamped `1.0.0` still opens the apply gate, and the mapping-history CSV is reused
+  verbatim. That CSV's own `framework_version` column therefore still reads `1.0.0` while the
+  mapping table reads `1.1.0` — expected, and the reason the plan gate survives an upgrade at all.
+
 ## [1.0.0] - 2026-08-26
 
 First public release, positioned as an independent community Preview for
