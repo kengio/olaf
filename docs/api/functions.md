@@ -8,7 +8,7 @@ beyond what's noted.
 
 They are **static methods on classes**, not bare module-level functions -- call them as written
 here. Most of those classes are pure namespaces (`Hash`, `Parse`, `ScopePath`, `Target`, `DAR`,
-`RLS`, `Catalog`). `OLAFError` is not: it is the framework's **exception base class**
+`Catalog`). `OLAFError` is not: it is the framework's **exception base class**
 (`class OLAFError(Exception)`, the parent of `ValidationError`, `DARHTTPError` and `UsageError` --
 see [errors.md](errors.md)) that additionally hosts the `classify` static method below.
 

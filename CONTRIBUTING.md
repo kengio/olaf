@@ -147,7 +147,7 @@ build that has nothing wrong with it. Read its report; it will not block you.
 ## Versioning
 
 `__version__` in `notebooks/olaf.ipynb` is stamped into `framework_version` on audit rows. Release
-tags use `v{__version__}` (for example, runtime `1.0.0` maps to tag `v1.0.0`). Put user-visible
+tags use `v{__version__}`. Put user-visible
 changes under `Unreleased` in `CHANGELOG.md`; release maintainers move them into a dated version
 section as part of the release review. Do not bump a version or create a tag in an ordinary pull
 request unless the pull request is explicitly the release change.

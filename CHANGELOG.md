@@ -12,12 +12,24 @@ No changes yet.
 
 ### Changed
 
-- Guardrail **G3** is no longer a runtime warning. `NOT IN` without `OR <col> IS NULL` used to add
-  one warning per row, on every run, for the life of the config — and it named only one of the two
-  valid mitigations, so a config that deliberately asserts the column is never NULL could never be
-  clean. Permanent warnings hide the occasional real one. The trap itself is real and unchanged;
-  it is now documented in `docs/architecture.md` as guidance rather than emitted per row.
-- `RLS.null_safety_warning()` is removed along with it.
+- Guardrail **G3** is no longer a runtime warning. The trap it named is real and unchanged —
+  `NOT IN` against a NULL is UNKNOWN, `WHERE` keeps only TRUE, and the row disappears from a
+  deny-list's result. **The direction is over-rejection: it removes rows a role should see and
+  cannot widen access to any row.** What went was the check, because it could not tell the two
+  apart. It was a substring test on the raw condition rather than the literal-stripping lexer
+  rules C9/C11/C13 share, so it warned on `status = 'CANNOT INVOICE'` — which contains no `NOT IN`
+  operator — and stayed silent on `region NOT IN ('a') AND type IS NULL`, where an unrelated
+  column's `IS NULL` muted it. Both directions wrong, on every run, for the life of a config.
+  It also named only one of the two valid mitigations, so a config that deliberately asserts the
+  column is never NULL could never come back clean.
+- The `Key invariants` entry in `docs/architecture.md` now carries the trap, both mitigations, and
+  the direction of failure. The starter workbook's own note said `Every NOT IN needs OR <col> IS
+  NULL`; it now names both mitigations too.
+
+### Removed
+
+- `RLS.null_safety_warning()`, the helper behind G3. It was listed in `docs/api/functions.md` as a
+  directly-callable helper, so this is a public-API removal.
 
 ## [1.0.0] - 2026-08-26
 
