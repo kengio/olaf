@@ -701,3 +701,34 @@ def test_no_shipped_file_still_names_the_retired_since_accessor():
     assert not offenders, "retired `since` accessor/column still named in:\n  " + "\n  ".join(
         offenders
     )
+
+
+def test_the_cookbook_guard_still_stands_before_every_live_example():
+    """olaf_cookbook runs live operations against the attached lakehouse, and one cell is all that
+    stops a Run All from executing them for real.
+
+    It used to carry TWO guards — the 1.0.0 release added one and a later commit added another
+    without noticing it. The duplicate was removed, which is correct, but it also took the margin:
+    what was two independent stops is now one, and nothing pinned either of them. A cell reordered
+    above the survivor would un-guard a notebook whose own text says every cell below reaches a
+    live lakehouse, and every gate would stay green while it happened.
+
+    Pin the property, not the prose: exactly one guard, it is the FIRST code cell, and it precedes
+    the `%run` that loads the runtime.
+    """
+    cookbook = REPO_ROOT / "notebooks" / "olaf_cookbook.ipynb"
+    cells = code_cells(cookbook)
+    guards = [i for i, text in cells if "notebookutils.notebook.exit(" in text]
+    assert len(guards) == 1, f"expected exactly one Run-All guard, found {len(guards)} at {guards}"
+
+    first_code_index = cells[0][0]
+    assert guards[0] == first_code_index, (
+        f"the guard is at cell {guards[0]} but the first code cell is {first_code_index} — "
+        "a live example now runs before it"
+    )
+
+    # the magic itself, not a mention of it — the guard cell names %run in its own comment,
+    # and this repo already pins a %run cell to hold nothing else
+    runs = [i for i, text in cells if text.lstrip().startswith("%run")]
+    assert runs, "the cookbook no longer loads the runtime"
+    assert guards[0] < runs[0], "the guard must exit before %run loads anything"

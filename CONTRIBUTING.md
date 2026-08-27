@@ -147,7 +147,20 @@ build that has nothing wrong with it. Read its report; it will not block you.
 ## Versioning
 
 `__version__` in `notebooks/olaf.ipynb` is stamped into `framework_version` on audit rows. Release
-tags use `v{__version__}`. Put user-visible
+tags use `v{__version__}`, and the annotated tag object must be created with the **sanitized
+maintainer identity**, never a personal one. A tag object is public and immutable, and
+`scripts/check_public_release.py` has `tree` and `archive` modes only — nothing catches a bad
+tagger afterwards. The identity is deliberately absent from every tracked file (the gate reports
+`APPROVED_IDENTITY_CONTEXT` if it appears in one), so read it off the previous release tag rather
+than typing it:
+
+```
+git -c user.name="$(git for-each-ref --format='%(taggername)' refs/tags/vPREV)" \
+    -c user.email="$(git for-each-ref --format='%(taggeremail:trim)' refs/tags/vPREV)" \
+    tag -a vX.Y.Z -m 'release: OLAF vX.Y.Z'
+```
+
+Put user-visible
 changes under `Unreleased` in `CHANGELOG.md`; release maintainers move them into a dated version
 section as part of the release review. Do not bump a version or create a tag in an ordinary pull
 request unless the pull request is explicitly the release change.

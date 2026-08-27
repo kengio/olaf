@@ -29,7 +29,11 @@ No changes yet.
 ### Removed
 
 - `RLS.null_safety_warning()`, the helper behind G3. It was listed in `docs/api/functions.md` as a
-  directly-callable helper, so this is a public-API removal.
+  directly-callable helper, so this is a public-API removal. Shipped as MINOR rather than MAJOR as
+  a recorded deviation, not an oversight: nothing is distributed as a package — the runtime is a
+  notebook users copy — `SECURITY.md` supports only the latest Preview, and the helper had no
+  caller inside or outside the framework. The repo states no Preview exemption from SemVer, so
+  this note is the exemption.
 
 ## [1.0.0] - 2026-08-26
 

@@ -32,6 +32,13 @@ platform impossibility claim. NotebookUtils documents its current audience surfa
 ceiling, rule C6) — every `role_name` used below already fits; see
 [architecture.md](architecture.md#c12) for the full format rules.
 
+**`NOT IN` and NULL — nothing checks this for you.** A deny-list predicate silently drops rows whose
+column is NULL: three-valued logic makes `col NOT IN (...)` UNKNOWN for a NULL, and `WHERE` keeps
+only TRUE. The direction is over-rejection — a role sees fewer rows than intended, never more — so
+it is a data-completeness bug, not an exposure one, and no rule catches it. Either write
+`col NOT IN (...) OR col IS NULL`, or satisfy yourself the column is never NULL. Decide which;
+do not leave it to chance. See [architecture.md](architecture.md#key-invariants).
+
 **Autotrim:** every cell shown below is stripped of leading/trailing whitespace before `generate`/
 `validate` reads it (`Parse.trim_row`), so a stray space from a copy-paste never trips a validation
 error. Whitespace *inside* an `rls_condition` string literal (e.g. `Region = 'TH '`) is preserved —

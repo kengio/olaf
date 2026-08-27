@@ -37,6 +37,12 @@ Every shipped data row is synthetic and must be replaced. Keep the working copy
 outside Fabric until the prerequisite access review is complete, then upload it only
 under `Files/security`.
 
+Writing an `rls_condition` with `NOT IN`: it drops rows whose column is NULL, because
+three-valued logic makes the term UNKNOWN and `WHERE` keeps only TRUE. That over-rejects — the
+role sees fewer rows, never more — and no rule catches it. Add `OR <col> IS NULL`, or satisfy
+yourself the column is never NULL. See
+[config-examples.md](config-examples.md) and [architecture.md](architecture.md#key-invariants).
+
 The authored tables are:
 
 - `config`: role name, target lakehouse label, table/folder includes and excludes,
