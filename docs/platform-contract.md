@@ -8,7 +8,7 @@ platform with which OLAF is intended to interoperate; see Microsoft's
 
 ## Release status
 
-OLAF v1.1.0 is a **community Preview for evaluation and development**, not a
+OLAF is a **community Preview for evaluation and development**, not a
 production-ready security product. Its mutating path uses the bulk Data Access
 Roles (DAR) `PUT`, which Microsoft labels **Preview** and says is not recommended
 for production use. Review that endpoint's current status before every deployment:
@@ -115,7 +115,7 @@ or remediated:
 
 ## Evidence status
 
-The public v1.1.0 release has automated fixture-based CI evidence. It does **not**
+The public release has automated fixture-based CI evidence. It does **not**
 claim exact-release-SHA verification against a live Fabric tenant. Any future live
 result must state the release SHA, Fabric Runtime, API date, target class, test scope,
 and cleanup result, and must be described as a dated observation rather than a

@@ -1,8 +1,8 @@
 # Changelog
 
 Notable changes to OLAF — OneLake Access Framework — are recorded here using
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) structure. Runtime
-version `1.1.0` maps to release tag `v1.1.0`.
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) structure. The runtime's
+`__version__` maps to the release tag `v{__version__}`.
 
 ## [Unreleased]
 

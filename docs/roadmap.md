@@ -1,6 +1,6 @@
 # Roadmap
 
-OLAF v1.1.0 is a community Preview. Roadmap items are options, not promises or
+OLAF is a community Preview. Roadmap items are options, not promises or
 release dates. They must not weaken the control-data boundary or turn an observed
 service behavior into a Microsoft platform contract.
 

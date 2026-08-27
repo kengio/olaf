@@ -1,6 +1,6 @@
 # Mode manual
 
-OLAF v1.1.0 is an independent community Preview for evaluation and development.
+OLAF is an independent community Preview for evaluation and development.
 The bulk DAR mutation endpoint used by `apply`, `reset`, and rollback's apply leg is
 officially Preview and is not a production contract:
 [Microsoft REST reference](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).

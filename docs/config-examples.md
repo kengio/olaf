@@ -1,6 +1,6 @@
 # Config cookbook — worked config → mapping examples
 
-All values here are synthetic. OLAF v1.1.0 is an independent community Preview;
+All values here are synthetic. OLAF is an independent community Preview;
 these examples describe OLAF's authored/mapping behavior, not proof of service
 enforcement. Platform rules and limits remain governed by the
 [official platform contract](platform-contract.md).
@@ -364,7 +364,7 @@ aggregates every error above (catalog validation **plus** the No-Graph member ga
 lakehouse target guard E14, the cross-role RLS×CLS guard E15, and the column-case guard E16) and
 rejects once with the full list, so you fix them in a single pass.
 
-The numeric platform-limit example is an OLAF v1.1.0 compatibility snapshot reviewed
+The numeric platform-limit example is an OLAF compatibility snapshot reviewed
 on 2026-08-22, not a permanent service guarantee. Verify Microsoft's current
 [OneLake security limitations](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model#onelake-security-limitations)
 before operation. Folder and permission behavior likewise follows the current

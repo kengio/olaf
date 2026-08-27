@@ -7,7 +7,7 @@ and submits OneLake data access roles and resolves a lakehouse display name. Kee
 real identifiers, request bodies, and responses out of repository artifacts and public issues.
 
 > **Preview boundary:** Microsoft labels the bulk create/update DAR endpoint **Preview**, for
-> evaluation and development, and not recommended for production use. OLAF v1.1.0 is therefore a
+> evaluation and development, and not recommended for production use. OLAF is therefore a
 > community Preview. The official contract says the supplied roles are created or updated; it does
 > not promise atomic full-set replacement or deletion of roles omitted from the body.
 > [Official bulk endpoint](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).

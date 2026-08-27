@@ -2,7 +2,7 @@
 
 Back to [API index](../api-reference.md) - [docs](../README.md).
 
-> OLAF v1.1.0 is a community Preview. Audit helpers summarize OLAF control records and the DAR
+> OLAF is a community Preview. Audit helpers summarize OLAF control records and the DAR
 > responses they can read; they are not universal authorization proofs across every Fabric engine
 > or access mode. Use the [platform contract](../platform-contract.md) when interpreting results.
 
