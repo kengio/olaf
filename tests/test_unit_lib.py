@@ -13,7 +13,6 @@ from _olaf_runtime import (
     CONFIG_AUTHOR_COLUMNS,
     DAR,
     MAPPING_COLUMNS,
-    RLS,
     Catalog,
     Generate,
     Member,
