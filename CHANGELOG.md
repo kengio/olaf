@@ -2,11 +2,22 @@
 
 Notable changes to OLAF — OneLake Access Framework — are recorded here using
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) structure. Runtime
-version `1.0.0` maps to release tag `v1.0.0`.
+version `1.1.0` maps to release tag `v1.1.0`.
 
 ## [Unreleased]
 
 No changes yet.
+
+## [1.1.0] - 2026-08-27
+
+### Changed
+
+- Guardrail **G3** is no longer a runtime warning. `NOT IN` without `OR <col> IS NULL` used to add
+  one warning per row, on every run, for the life of the config — and it named only one of the two
+  valid mitigations, so a config that deliberately asserts the column is never NULL could never be
+  clean. Permanent warnings hide the occasional real one. The trap itself is real and unchanged;
+  it is now documented in `docs/architecture.md` as guidance rather than emitted per row.
+- `RLS.null_safety_warning()` is removed along with it.
 
 ## [1.0.0] - 2026-08-26
 

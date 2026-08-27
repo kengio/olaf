@@ -790,6 +790,11 @@ records when generate ran. Full detail: data-model.md.
 1. The plan/apply role build reads **only** the mapping lock-file — never the short config (TOCTOU closed).
 2. New tables are absent from the saved mapping until the next generate. The resulting platform access still depends on workspace/item permissions and engine/access mode; OLAF does not infer that nobody can read them.
 3. Glob (A2): 0-match on an include OR an exclude = error; table schema part is literal-only. Case resolves through the catalog. Role and predicate limits are OLAF compatibility guards tied to the cited current platform pages, not permanent no-workaround guarantees.
-4. G3: `NOT IN` without `OR <col> IS NULL` = warning (three-valued logic drops NULL rows silently).
+4. G3 (guidance, not enforced): `NOT IN` against a nullable column drops NULL rows silently —
+   SQL three-valued logic makes `NOT IN` UNKNOWN for a NULL, and `WHERE` keeps only TRUE. Guard it
+   with `OR <col> IS NULL`, or assert the column is never NULL; do one of the two deliberately.
+   OLAF emitted this as a per-row warning until 1.1.0 and no longer does: it fired on every
+   deny-list in every run, named only one of the two valid mitigations, and the noise hid real
+   warnings.
 5. Cross-row rules (see the Rule catalog above) warn/block ambiguous multi-role policy shapes. Effective access is engine-explicit because SQL endpoint CLS differs from non-SQL CLS. C5 is a conservative guard around Microsoft's documented unsupported RLS/CLS combinations; it does not extrapolate untested behavior across tables or membership paths.
 6. Log rows are single-valued — one row per (role × scope × member × action) step; lists never reach the log. Every log row also carries `config_hash`/`config_version`.
