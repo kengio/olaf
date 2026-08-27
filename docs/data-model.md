@@ -128,7 +128,7 @@ latest generation; history lives in `onelake_security_log`. This is the **only**
 | `generated_at` | timestamp | — | UTC ISO-8601 | No | `2026-07-11T12:00:00+00:00` | `generate` | audit display; sufficient proxy for "when generate ran" (replaces the dropped `catalog_snapshot_at`) |
 | `config_hash` | string | — | 16-char hex — `sha256(json.dumps(rows, sort_keys=True))[:16]` over the active rows **projected to `CONFIG_AUTHOR_COLUMNS`** (foreign columns on the physical table never enter the fingerprint) | No | `284ae40f8b47a294` | `generate` | `plan`/`apply` staleness guard (content-based — a no-op config rewrite does not invalidate a pending plan); generation-trace queries |
 | `config_version` | bigint | — | Delta commit version of `onelake_security_config` at generate time; `null` if the config table isn't Delta or `DESCRIBE HISTORY` is unavailable | Yes | `42` | `generate` (`SELECT max(version) FROM (DESCRIBE HISTORY onelake_security_config)`) | generation-trace queries (`VERSION AS OF`), generation timeline, `show` config_version annotation |
-| `framework_version` | string | — | semver of the library (`__version__`) | No | `1.0.0` | `generate` | provenance display, compatibility checks |
+| `framework_version` | string | — | semver of the library (`__version__`) | No | `1.1.0` | `generate` | provenance display, compatibility checks |
 
 23 columns. The `member_*_names` carry the human-facing effective set; the `member_*_ids` carry the
 objectIds resolved from `onelake_security_member` (No-Graph; aligned 1:1) that `DAR.to_role`
@@ -178,7 +178,7 @@ string deliberately (see the physical note above).
 | `tenant_id` | string | — | Entra **tenant GUID** of the run (blank on `setup`, which resolves no tenant) | Yes | `00000…` | every mode that logs | tenant-scoped audit queries |
 | `mapping_hash` | string | — | 16-char content fingerprint of the mapping lock-file at run time | Yes | `9f8e7d6c…` | `generate`/`plan`/`apply` | the saved-plan gate (`apply` matches the `plan` record on `config_hash` **and** `mapping_hash`, binding the plan to the exact mapping generation it reviewed); mapping-generation trace (config → mapping → run) |
 | `mapping_version` | bigint | — | Delta version of `onelake_security_mapping`, or null | Yes | `7` | `generate`/`plan`/`apply` | mapping-generation timeline |
-| `framework_version` | string | — | semver of the framework (`__version__`) that wrote the row — the **run-time** code version (may differ from the mapping's generate-time version) | No | `1.0.0` | every mode that logs | which code version ran — completes the config → mapping → code → run provenance chain |
+| `framework_version` | string | — | semver of the framework (`__version__`) that wrote the row — the **run-time** code version (may differ from the mapping's generate-time version) | No | `1.1.0` | every mode that logs | which code version ran — completes the config → mapping → code → run provenance chain |
 
 27 columns. `member_name` (display name) and `member_id` (resolved objectId) ride together on every
 grant-grain row; `show`'s enrichment joins the live DAR (which exposes objectIds) on `member_id`.

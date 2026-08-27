@@ -1,6 +1,6 @@
 # Runbook — setup, config, and operations
 
-OLAF v1.0.0 is an independent community Preview for evaluation and development,
+OLAF is an independent community Preview for evaluation and development,
 not a production-ready security product. Its mutating path depends on Microsoft's
 Preview bulk DAR endpoint:
 [Create or update data access roles](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
@@ -36,6 +36,12 @@ Start from [`../configs/onelake_security.xlsx`](../configs/onelake_security.xlsx
 Every shipped data row is synthetic and must be replaced. Keep the working copy
 outside Fabric until the prerequisite access review is complete, then upload it only
 under `Files/security`.
+
+Writing an `rls_condition` with `NOT IN`: it drops rows whose column is NULL, because
+three-valued logic makes the term UNKNOWN and `WHERE` keeps only TRUE. That over-rejects — the
+role sees fewer rows, never more — and no rule catches it. Add `OR <col> IS NULL`, or satisfy
+yourself the column is never NULL. See
+[config-examples.md](config-examples.md) and [architecture.md](architecture.md#key-invariants).
 
 The authored tables are:
 
@@ -173,7 +179,7 @@ Before a real apply/reset, OLAF records prepared intent and a backup pointer. If
 operation becomes ambiguous, preserve the incident sentinel, prepared row, and backup.
 Stop later sensitive modes; do not automatically restore over a concurrent change.
 
-OLAF v1.0.0 has **no supported public backup-replay method**. Do not call
+OLAF has **no supported public backup-replay method**. Do not call
 `FabricClient.put_roles()` directly from a public workflow and do not treat a backup
 pointer as a local file path. A low-level call bypasses the mandatory sentinel and
 control-data gates, and no high-level guarded recovery method exists yet.

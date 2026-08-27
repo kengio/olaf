@@ -1,12 +1,54 @@
 # Changelog
 
 Notable changes to OLAF — OneLake Access Framework — are recorded here using
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) structure. Runtime
-version `1.0.0` maps to release tag `v1.0.0`.
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) structure. The runtime's
+`__version__` maps to the release tag `v{__version__}`.
 
 ## [Unreleased]
 
 No changes yet.
+
+## [1.1.0] - 2026-08-27
+
+### Changed
+
+- Guardrail **G3** is no longer a runtime warning. The trap it named is real and unchanged —
+  `NOT IN` against a NULL is UNKNOWN, `WHERE` keeps only TRUE, and the row disappears from a
+  deny-list's result. **The direction is over-rejection: it removes rows a role should see and
+  cannot widen access to any row.** What went was the check, because it could not tell the two
+  apart. It was a substring test on the raw condition rather than the literal-stripping lexer
+  rules C9/C11/C13 share, so it warned on `status = 'CANNOT INVOICE'` — which contains no `NOT IN`
+  operator — and stayed silent on `region NOT IN ('a') AND type IS NULL`, where an unrelated
+  column's `IS NULL` muted it. Both directions wrong, on every run, for the life of a config.
+  It also named only one of the two valid mitigations, so a config that deliberately asserts the
+  column is never NULL could never come back clean.
+- The `Key invariants` entry in `docs/architecture.md` now carries the trap, both mitigations, and
+  the direction of failure. The starter workbook's own note said `Every NOT IN needs OR <col> IS
+  NULL`; it now names both mitigations too.
+
+### Removed
+
+- `RLS.null_safety_warning()`, the helper behind G3. It was listed in `docs/api/functions.md` as a
+  directly-callable helper, so this is a public-API removal. Shipped as MINOR rather than MAJOR as
+  a recorded deviation, not an oversight: nothing is distributed as a package — the runtime is a
+  notebook users copy — `SECURITY.md` supports only the latest Preview, and the helper had no
+  caller inside or outside the framework. The repo states no Preview exemption from SemVer, so
+  this note is the exemption.
+
+### Upgrade note
+
+- **The first `generate` after upgrading re-stamps the mapping, even on an unchanged config.** The
+  idempotent-skip fast path requires the stored `framework_version` to equal `__version__`, so on
+  the first run it does not match: `changed` is `True` rather than `False`, the status is `success`
+  rather than `skipped`, two log rows are written instead of one, and the mapping table is rewritten
+  with `framework_version` `1.1.0`. `config_hash` does not move — it hashes config rows only — and
+  the run after that skips again. A pipeline gated on `envelope["changed"]` will therefore re-plan
+  and re-apply once per deployment on upgrade. Nothing fails; both `success` and `skipped` exit
+  normally.
+- `mapping_hash` projects to the mapping columns and excludes provenance, so it is unchanged: a
+  saved-plan row stamped `1.0.0` still opens the apply gate, and the mapping-history CSV is reused
+  verbatim. That CSV's own `framework_version` column therefore still reads `1.0.0` while the
+  mapping table reads `1.1.0` — expected, and the reason the plan gate survives an upgrade at all.
 
 ## [1.0.0] - 2026-08-26
 

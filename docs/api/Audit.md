@@ -2,7 +2,7 @@
 
 Back to [API index](../api-reference.md) - [docs](../README.md).
 
-> OLAF v1.0.0 is a community Preview. Audit helpers summarize OLAF control records and the DAR
+> OLAF is a community Preview. Audit helpers summarize OLAF control records and the DAR
 > responses they can read; they are not universal authorization proofs across every Fabric engine
 > or access mode. Use the [platform contract](../platform-contract.md) when interpreting results.
 
@@ -185,7 +185,7 @@ Returns: dict | None -- `config_hash`, `config_version`, `framework_version`, `g
 
 ```python
 trail.current_generation()
-# {"config_hash": "284ae40f8b47a294", "config_version": 42, "framework_version": "1.0.0",
+# {"config_hash": "284ae40f8b47a294", "config_version": 42, "framework_version": "1.1.0",
 #  "generated_at": "2026-07-11T12:00:00+00:00", "mapping_hash": "9f8e7d6c00000000", "mapping_version": 7}
 ```
 

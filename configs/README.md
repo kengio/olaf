@@ -40,6 +40,6 @@ intent from that ID. Microsoft documents NotebookUtils token audiences separatel
 OLAF's decision not to call Graph must not be read as a universal Fabric limitation:
 [NotebookUtils credentials](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-credentials#get-token).
 
-Platform guidance in the workbook is versioned for OLAF v1.0.0 and points to the
+Platform guidance in the workbook is versioned for this OLAF release and points to the
 maintained [platform contract](../docs/platform-contract.md). Microsoft's service
 rules and limits may change; the official links remain authoritative.

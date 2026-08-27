@@ -112,7 +112,7 @@ Deployment pipelines are documented separately in
 [Fabric deployment pipelines](https://learn.microsoft.com/en-us/fabric/cicd/deployment-pipelines/intro-to-deployment-pipelines).
 
 Use local CI for deterministic tests. Treat any external smoke run as separately authorized,
-redacted evidence bound to the exact commit SHA. Do not promote OLAF v1.0.0 Preview as a
+redacted evidence bound to the exact commit SHA. Do not promote the OLAF Preview as a
 production-ready security control.
 
 ## Which path when

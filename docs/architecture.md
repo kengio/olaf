@@ -1,6 +1,6 @@
 # Architecture — OneLake Access Framework
 
-OLAF v1.0.0 is an independent community Preview for evaluation and development,
+OLAF is an independent community Preview for evaluation and development,
 not a production-ready security product. It turns an authored role × scope × rule
 matrix into reviewed Microsoft Fabric OneLake data access role (DAR) requests and
 audit evidence from a Fabric notebook. Its bulk DAR mutation dependency is officially
@@ -597,7 +597,7 @@ the release does not publish an exact-SHA live service result for constant predi
 
 The check asks whether a bareword appears outside string literals. It deliberately
 avoids interpreting keywords as columns. The contract is limited to ASCII identifiers;
-non-ASCII predicate identifiers are outside OLAF v1.0.0's supported authoring surface.
+non-ASCII predicate identifiers are outside OLAF's supported authoring surface.
 
 **Scope of that claim — ASCII only (known limitation).** The bareword test is `[A-Za-z_]`, so
 "bareword" means *ASCII* bareword. This never widens access; it can only over-reject. Any non-ASCII
@@ -762,7 +762,7 @@ Two consequences worth stating plainly:
 
 ### Limits (fail at generate/plan, not at apply)
 
-OLAF v1.0.0 snapshots the following compatibility ceilings from Microsoft's
+OLAF snapshots the following compatibility ceilings from Microsoft's
 official limitations reviewed on 2026-08-22. They are volatile service values; check
 the current source before operation:
 [OneLake security limitations](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model#onelake-security-limitations).
@@ -790,6 +790,6 @@ records when generate ran. Full detail: data-model.md.
 1. The plan/apply role build reads **only** the mapping lock-file — never the short config (TOCTOU closed).
 2. New tables are absent from the saved mapping until the next generate. The resulting platform access still depends on workspace/item permissions and engine/access mode; OLAF does not infer that nobody can read them.
 3. Glob (A2): 0-match on an include OR an exclude = error; table schema part is literal-only. Case resolves through the catalog. Role and predicate limits are OLAF compatibility guards tied to the cited current platform pages, not permanent no-workaround guarantees.
-4. G3: `NOT IN` without `OR <col> IS NULL` = warning (three-valued logic drops NULL rows silently).
+4. `NOT IN` against a nullable column drops NULL rows silently — three-valued logic makes the term UNKNOWN for a NULL and `WHERE` keeps only TRUE. **This never widens access; it can only over-reject** — a row vanishes from a deny-list's result, so the failure is missing data, not exposure. Guard it with `OR <col> IS NULL`, or assert the column is never NULL; do one of the two deliberately. OLAF warned about this per row (guardrail G3) until the release noted in the CHANGELOG and no longer does: the check was a substring test on the raw condition, so it fired on `status = 'CANNOT INVOICE'` (no `NOT IN` operator at all) and stayed silent on `region NOT IN ('a') AND type IS NULL` (a different column's `IS NULL` muted it). It could not be made sound without the literal-stripping lexer the other RLS rules share, and it named only one of the two mitigations above.
 5. Cross-row rules (see the Rule catalog above) warn/block ambiguous multi-role policy shapes. Effective access is engine-explicit because SQL endpoint CLS differs from non-SQL CLS. C5 is a conservative guard around Microsoft's documented unsupported RLS/CLS combinations; it does not extrapolate untested behavior across tables or membership paths.
 6. Log rows are single-valued — one row per (role × scope × member × action) step; lists never reach the log. Every log row also carries `config_hash`/`config_version`.

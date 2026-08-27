@@ -13,7 +13,6 @@ from _olaf_runtime import (
     CONFIG_AUTHOR_COLUMNS,
     DAR,
     MAPPING_COLUMNS,
-    RLS,
     Catalog,
     Generate,
     Member,
@@ -72,11 +71,6 @@ def test_parse_table_entry_other_absolute_path_rejected():
 def test_parse_table_entry_empty_part_rejected(entry):
     with pytest.raises(ValidationError):
         Parse.table_entry(entry)
-
-
-@pytest.mark.parametrize("condition", [None, ""], ids=["None", "empty"])
-def test_null_safety_warning_empty_is_none(condition):
-    assert RLS.null_safety_warning(condition) is None
 
 
 # ---------------------------------------------------------------------------------------------
@@ -193,7 +187,10 @@ def test_exclude_side_parse_error_recorded():
     assert any("schema part must be literal" in e for e in errors)
 
 
-def test_rls_null_safety_warning_in_generate():
+def test_a_bare_not_in_no_longer_warns():
+    """G3 was a runtime warning until 1.1.0. It fired on every deny-list a config held, forever,
+    and the only mitigation it named was one of two valid ones — so it became noise that hid real
+    warnings. The trap it described is real and now lives in docs/architecture.md instead."""
     _errors, warnings = generate_warnings(
         [
             make_row(
@@ -204,7 +201,7 @@ def test_rls_null_safety_warning_in_generate():
             )
         ]
     )
-    assert any("guardrail G3" in w for w in warnings)
+    assert warnings == [], warnings
 
 
 def test_rls_without_tables_b3():

@@ -103,17 +103,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          archive_one="$RUNNER_TEMP/olaf-v1.0.0-one.tar"
-          archive_two="$RUNNER_TEMP/olaf-v1.0.0-two.tar"
-          git archive --format=tar --prefix=olaf-1.0.0/ --output="$archive_one" HEAD
-          git archive --format=tar --prefix=olaf-1.0.0/ --output="$archive_two" HEAD
+          # The prefix is release evidence, so it must not name a version this tree may no
+          # longer be. One source of truth, and no inline script: a heredoc here sits at
+          # column 0 and silently ends the YAML block, which parses to zero jobs.
+          version="$(python scripts/print_version.py)"
+          prefix="olaf-$version/"
+          archive_one="$RUNNER_TEMP/olaf-v$version-one.tar"
+          archive_two="$RUNNER_TEMP/olaf-v$version-two.tar"
+          git archive --format=tar --prefix="$prefix" --output="$archive_one" HEAD
+          git archive --format=tar --prefix="$prefix" --output="$archive_two" HEAD
           cmp --silent "$archive_one" "$archive_two"
           sha256sum "$archive_one"
-          python scripts/check_public_release.py archive "$archive_one" --tree HEAD --prefix olaf-1.0.0/
-          source_tree="$RUNNER_TEMP/olaf-v1.0.0"
+          python scripts/check_public_release.py archive "$archive_one" --tree HEAD --prefix "$prefix"
+          source_tree="$RUNNER_TEMP/olaf-v$version"
           mkdir "$source_tree"
           tar --extract --file="$archive_one" --directory="$source_tree"
           python scripts/check_secrets.py self-test
-          python scripts/check_secrets.py tree "$source_tree/olaf-1.0.0"
+          python scripts/check_secrets.py tree "$source_tree/olaf-$version"
           python scripts/check_secrets.py history .
           python scripts/check_secrets.py all-objects .

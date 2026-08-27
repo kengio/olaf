@@ -8,7 +8,7 @@ beyond what's noted.
 
 They are **static methods on classes**, not bare module-level functions -- call them as written
 here. Most of those classes are pure namespaces (`Hash`, `Parse`, `ScopePath`, `Target`, `DAR`,
-`RLS`, `Catalog`). `OLAFError` is not: it is the framework's **exception base class**
+`Catalog`). `OLAFError` is not: it is the framework's **exception base class**
 (`class OLAFError(Exception)`, the parent of `ValidationError`, `DARHTTPError` and `UsageError` --
 see [errors.md](errors.md)) that additionally hosts the `classify` static method below.
 
@@ -34,7 +34,6 @@ see [errors.md](errors.md)) that additionally hosts the `classify` static method
 | `Target.tenant(tenant_id=None)` | Explicit `tenant_id` wins; else best-effort auto-resolve from the runtime context; `None` if neither is available. |
 | `Target.run_by(spark=None)` | Who is running this: runtime-context `userName` (an interactive user's UPN), else runtime-context `userId` (the running principal's Entra **object id** -- the layer that makes a service-principal / workspace-identity pipeline run attributable at all), else Spark `current_user()`, else `None`. Exception-safe. `Log` then labels a GUID-shaped result via [`Log.resolve_principal`](Log.md#resolve_principalspark-member_table-value) -- the id is never replaced. |
 | `OLAFError.classify(exc)` | Map an exception to the audit `error_category` vocabulary: `http` \| `validation` \| `guard` \| `unexpected`. |
-| `RLS.null_safety_warning(rls_condition)` | Warn when an `rls_condition` has `NOT IN` without `OR <col> IS NULL` (SQL three-valued-logic trap; guardrail G3). |
 
 The rest of `notebooks/olaf.ipynb` -- the `generate`/`plan`/`apply` pipeline steps
 (`Generate.rows`, `Catalog.canonical`, `DAR.diff`, `DAR.merge_upsert`/`DAR.merge_replace`,

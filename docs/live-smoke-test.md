@@ -1,6 +1,6 @@
 # Optional live Fabric validation protocol
 
-The public v1.0.0 release has fixture-based CI evidence only. It does **not** claim
+The public release has fixture-based CI evidence only. It does **not** claim
 that the release commit was run against a live Microsoft Fabric tenant.
 
 This page defines the minimum record for a future, separately authorized live

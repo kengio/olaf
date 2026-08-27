@@ -694,3 +694,77 @@ def test_all_objects_hands_the_object_stream_to_an_interactive_container(tmp_pat
         "the stdin-mode container must be interactive, or docker replaces its stdin with "
         f"/dev/null and the scan reads nothing: {command}"
     )
+
+
+def test_workflow_block_scalars_never_dedent_below_their_own_block():
+    """The other half of the same footgun, and it has now bitten this repo twice.
+
+    A `run: |` block ends at the first non-blank line indented LESS than the block's own content
+    indent. A heredoc written inside one looks natural at column 0 --
+
+        run: |
+          version="$(python - <<'PY'
+    import json
+    PY
+    )"
+
+    -- and YAML stops reading the block at `import json`, then tries that line as a mapping key.
+    GitHub rejects the whole file: zero jobs, no annotations, and `gh pr checks` says "no checks
+    reported on the branch", which reads like CI has not started rather than like CI is broken.
+    Branch protection then waits forever for checks that can never appear.
+
+    The sibling test above guards the `": "` inline-scalar shape, and its docstring records that
+    the same class of break once meant CI "had never run a single time, on any commit". It cannot
+    see this one: nothing on those lines is an inline scalar. Same outcome, different syntax.
+
+    pyyaml is deliberately not a test dependency (see the sibling), so this measures indentation
+    rather than parsing the document.
+    """
+    import re
+
+    block_open = re.compile(r"^(\s*)-?\s*(?:run|if|shell|env|with):\s*[|>][+-]?\s*$")
+    # a mapping key, or a list item — anything else at this indent is not YAML
+    yaml_key = re.compile(r"^\s*(?:-\s+)?(?:[A-Za-z_][\w.-]*|'[^']*'|\"[^\"]*\"):(?:\s|$)|^\s*-\s")
+    offenders = []
+    for path in sorted((REPO_ROOT / ".github").rglob("*.yml")):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        index = 0
+        while index < len(lines):
+            opened = block_open.match(lines[index])
+            if not opened:
+                index += 1
+                continue
+            key_indent = len(opened.group(1))
+            index += 1
+            # the block's content indent is set by its first non-blank line
+            while index < len(lines) and not lines[index].strip():
+                index += 1
+            if index >= len(lines):
+                break
+            content_indent = len(lines[index]) - len(lines[index].lstrip())
+            if content_indent <= key_indent:
+                continue  # an empty block; the next key follows
+            while index < len(lines):
+                line = lines[index]
+                if not line.strip():
+                    index += 1
+                    continue
+                indent = len(line) - len(line.lstrip())
+                if indent >= content_indent:
+                    index += 1
+                    continue
+                # Dedented, so YAML has ended the block here. That is only legal if this line is
+                # the next mapping key or list item. Testing the indent instead is what a first
+                # draft of this guard did, and it passed on the very break it was written for:
+                # a heredoc body at column 0 is BELOW the block's key, which read as "closing an
+                # outer mapping" rather than as the killer it is.
+                if not yaml_key.match(line):
+                    offenders.append(f"{relative}:{index + 1}: {line.strip()[:60]!r}")
+                break
+
+    assert not offenders, (
+        "a line inside a `run: |` block is indented below the block, which ends the block and "
+        "makes the workflow unparseable — GitHub then runs zero jobs and reports no checks:\n  "
+        + "\n  ".join(offenders)
+    )

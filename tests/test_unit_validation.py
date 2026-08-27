@@ -1,4 +1,4 @@
-"""The documented error/warning cases E1-E12 plus the retained G3 / duplicate invariants and
+"""The documented error/warning cases E1-E12 plus the retained duplicate invariants and
 the C4-C13 rule family, as pytest functions.
 
 Ported from `olaf_test_unit.ipynb` class `ValidationRules`.
@@ -944,14 +944,6 @@ def test_b3_readwrite_cannot_carry_cls():
         ]
     )
     assert any("rule B3" in e for e in errors)
-
-
-def test_g3_not_in_without_is_null_warns():
-    assert RLS.null_safety_warning("CategoryId NOT IN ('a')") is not None
-
-
-def test_g3_not_in_with_or_is_null_is_clean():
-    assert RLS.null_safety_warning("CategoryId NOT IN ('a') OR CategoryId IS NULL") is None
 
 
 def test_exact_duplicate_row_skipped():
