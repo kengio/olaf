@@ -104,14 +104,9 @@ jobs:
         run: |
           set -euo pipefail
           # The prefix is release evidence, so it must not name a version this tree may no
-          # longer be. Read it from the runtime instead of freezing it here.
-          version="$(python - <<'PY'
-import json, re
-nb = json.load(open("notebooks/olaf.ipynb", encoding="utf-8"))
-src = "\n".join("".join(c.get("source", [])) for c in nb["cells"])
-print(re.search(r'__version__\s*=\s*"([^"]+)"', src).group(1))
-PY
-)"
+          # longer be. One source of truth, and no inline script: a heredoc here sits at
+          # column 0 and silently ends the YAML block, which parses to zero jobs.
+          version="$(python scripts/print_version.py)"
           prefix="olaf-$version/"
           archive_one="$RUNNER_TEMP/olaf-v$version-one.tar"
           archive_two="$RUNNER_TEMP/olaf-v$version-two.tar"
