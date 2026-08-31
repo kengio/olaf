@@ -6,7 +6,29 @@ Notable changes to OLAF — OneLake Access Framework — are recorded here using
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- **`olaf_master_workflow` takes a `rebuild` parameter, defaulting to `False`**, and passes it to
+  `generate`. The runner previously called `generate` with no arguments, so there was no way to
+  ask for a rebuild from the notebook a pipeline actually runs — the framework had the parameter,
+  the workflow did not expose it. The default is an access decision rather than a performance one:
+  `generate`'s idempotency skip is keyed on `config_hash`, which fingerprints the config rows and
+  cannot see the catalog, so a table created since the last generate that matches an existing
+  wildcard stays out of the mapping and ungranted until somebody deliberately passes
+  `rebuild = True`. Taking it in is all-or-nothing — every wildcard is re-resolved, so every table
+  added since the last generate arrives with it.
+
+### Fixed
+
+- `docs/config-examples.md` said a new table matching `sales.*` "shows up in the mapping on the
+  next generate with no config change needed". The first half is right and the second half is
+  what makes it wrong: an unchanged config takes the idempotency skip, so the *next* generate is
+  usually the one that rebuilds nothing. The example now says the table needs a generate that
+  actually runs, and names `rebuild=True` as the way to get one. The CLS blacklist example, which
+  described a newly discovered column the same way, is corrected alongside it.
+- `docs/architecture.md`'s second key invariant read "New tables are absent from the saved mapping
+  until the next generate", which is true only of a generate that rebuilds. It now says so, and
+  says why `config_hash` cannot see the difference.
 
 ## [1.1.0] - 2026-08-27
 
