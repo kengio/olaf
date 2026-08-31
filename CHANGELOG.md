@@ -29,6 +29,12 @@ Notable changes to OLAF — OneLake Access Framework — are recorded here using
 - `docs/architecture.md`'s second key invariant read "New tables are absent from the saved mapping
   until the next generate", which is true only of a generate that rebuilds. It now says so, and
   says why `config_hash` cannot see the difference.
+- `docs/modes.md` documented every mode except the one behaviour an operator meets most often: its
+  `generate` section never mentioned the idempotency skip, even though the result-envelope table
+  above it already advertises `status=skipped`. It now carries the skip, what `config_hash` can and
+  cannot see, the five exceptions that defeat it, and what `rebuild=True` costs.
+- `docs/api/Deployment.md` was headed `generate(rebuild=False)` and never said what the parameter
+  did. It does now.
 
 ## [1.1.0] - 2026-08-27
 
