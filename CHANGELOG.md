@@ -35,6 +35,19 @@ Notable changes to OLAF — OneLake Access Framework — are recorded here using
   cannot see, the five exceptions that defeat it, and what `rebuild=True` costs.
 - `docs/api/Deployment.md` was headed `generate(rebuild=False)` and never said what the parameter
   did. It does now.
+- `docs/runbook.md` had no entry for the operational case an estate using a table glob will meet
+  first — a new table matching `sales.*` that is not granted, after a run that reported success.
+  It now has 3i, covering why the skip holds, what `rebuild=True` re-resolves and drops, the
+  `exclude_tables` hold-back, the stale converse when a table is deleted, and the unrelated
+  conditions that force a re-resolution as a side effect. The word `rebuild` previously appeared
+  in the runbook **only** in 3e — `setup(rebuild=True)`, which drops a control table and loses its
+  data — so an operator searching for it found the destructive one and nothing else. 3e now says
+  so and points at 3i.
+- `notebooks/olaf_cookbook.ipynb` told readers that re-running an unchanged config is a no-op
+  without saying that a changed **catalog** is also a no-op, which is the half that surprises
+  people. It now says so and points at RUNBOOK 3i.
+- `docs/config-examples.md`'s CLS whitelist example said the difference "only shows up on a later
+  generation" — the same ambiguity 7a had just lost two sections earlier.
 
 ## [1.1.0] - 2026-08-27
 

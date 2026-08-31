@@ -220,6 +220,11 @@ capture a recovery point, run health and the external access review, supply a fr
 attestation, then review the rebuild result. Never put a real table sample in a public
 issue or pull request.
 
+**Not the same `rebuild` as the one in 3i.** `setup(rebuild=True)` DROPS and recreates a
+control table and loses its data; `generate(rebuild=True)` only re-resolves the config
+and writes a new mapping. They share a parameter name and nothing else. If you arrived
+here searching for `rebuild` because a new table is missing from a role, you want 3i.
+
 ## 3f. `Files/security/` grows without bound — what to prune, and what not to
 
 Define an organization-owned retention policy for imported workbooks, review CSVs,
@@ -255,6 +260,45 @@ Cleanup may run without attestation only to reduce retained control data during
 containment. It preserves an operation/incident sentinel and reports remaining
 tables/files. It must return that exposure remediation is not proved. It cannot erase
 prior readers, Delta history, caches, copies, exports, or external logs.
+
+## 3i. A new table matches an existing glob but is not granted — `generate(rebuild=True)`
+
+A role scoped `sales.*` covers the tables that existed when its mapping was generated.
+A table created since then is absent from the mapping, so no grant on it is submitted,
+even though every run since has reported success.
+
+This is the idempotency skip, not a fault. `generate(rebuild=False)` — the default —
+compares `config_hash`, a fingerprint of the config rows, and rebuilds nothing when it
+matches. That fingerprint cannot see the catalog, so a table appearing in a lakehouse
+never changes it. Treat the behaviour as intended: a table arriving in storage is not
+by itself a decision to share it, and the run that shares it should be one somebody
+asked for.
+
+To take it in, re-run generate with `rebuild=True`, then plan and review as normal
+before any apply. **`rebuild=True` re-resolves every pattern in the config**, so it also
+takes in every other table that has appeared since the last real generate, and drops any
+table that has since been deleted. Read the plan before approving it; the set that
+arrives is rarely only the table you had in mind. To hold one back deliberately, name it
+in `exclude_tables` — the table must already exist in the catalog, because a zero-match
+exclude is an error (rule A2).
+
+Distinguish this from `setup(rebuild=True)` in 3e, which drops and recreates a control
+table and loses data. This one writes a mapping and nothing else.
+
+A table OLAF has not granted is not a table OLAF has denied. Whether anyone can read it
+still depends on workspace and item permissions and the access path, so do not treat a
+missing grant as containment. If it must be unreadable, confirm that separately.
+
+The same skip leaves the converse stale: a table deleted from the lakehouse remains in
+the mapping until a real generate, and apply will keep submitting a role that names a
+path which no longer exists.
+
+Several unrelated conditions also force a full re-resolution with no parameter — a
+member pattern in the config, drifted member objectIds, a mapping stamped for another
+target, a member table in an error state, and a framework-version change. Any of them
+brings in new catalog matches as a side effect, so a run made for one of those reasons
+can widen scope without an accompanying config edit. This is another reason to read the
+plan rather than the config diff.
 
 ## 4. Test / CI gate
 
