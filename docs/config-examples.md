@@ -247,9 +247,10 @@ lists them.
 
 **Takeaway:** `generate` computes `visible_columns` as `include_columns` directly (the columns that
 exist on the table), so today's result matches 7a's resolved allow-list exactly. The difference
-only shows up on a later generation: whitelist mode does not add a new column until
-the author explicitly includes it (unlike 7a's blacklist, where regeneration adds a
-new non-excluded column to OLAF's allow-list). Setting both `include_columns` and
+only shows up on a later generation that actually rebuilds: whitelist mode does not add
+a new column until the author explicitly includes it (unlike 7a's blacklist, where a real
+regeneration adds a new non-excluded column to OLAF's allow-list — and, like every other
+catalog change, an unchanged config skips instead). Setting both `include_columns` and
 `exclude_columns` on the same row is an error (E12 below) — pick one CLS mode per row.
 
 ### 7c. RLS + CLS for one member — one role, never two (rule C5)
