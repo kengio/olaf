@@ -100,8 +100,12 @@ name lookups against the catalog.
 | SalesRead | /Tables/sales/returns | Table | sg-analysts |
 
 **Takeaway:** the wildcard is resolved against the live catalog at generate time — a new
-`sales.*` table shows up in the mapping on the next generate with no config change needed. The
-schema part (`sales`) stays literal; only the table part accepts `*`/`?` (rule A2).
+`sales.*` table needs no config change to be covered, but it does need a generate that actually
+*runs*. `generate` is idempotent by default and its skip is keyed on `config_hash`, which
+fingerprints the config rows and cannot see the catalog: an unchanged config skips, and the new
+table stays out of the mapping — and ungranted — until `rebuild=True` (or an edit that changes the
+hash) forces a real generate. The schema part (`sales`) stays literal; only the table part accepts
+`*`/`?` (rule A2). See [modes.md](modes.md) for the skip and its exceptions.
 
 ### 3. All-except (`sales.*` minus `sales.returns`)
 
@@ -218,7 +222,8 @@ declares (include and exclude alike), not only the survivors that reach the mapp
 
 **Takeaway:** `visible_columns` holds the allow-list OLAF places in the DAR request,
 not the authored exclusions. In blacklist mode, a newly discovered column enters the
-allow-list on the next generate unless explicitly excluded; until regeneration, it is
+allow-list on the next generate that actually runs, unless explicitly excluded — an
+unchanged config takes the idempotency skip, so until a real regeneration the column is
 absent from OLAF's saved payload. Actual engine enforcement is outside this mapping
 example and differs by access path. See Microsoft's
 [CLS semantics](https://learn.microsoft.com/en-us/fabric/onelake/security/data-access-control-model#column-level-security).

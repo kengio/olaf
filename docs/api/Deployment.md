@@ -42,6 +42,12 @@ Validates the authored config, resolves synthetic or approved member-cache entri
 the mapping and review artifact. OLAF deliberately does not call Microsoft Graph; this is a design
 choice, not a claim that Graph access is universally impossible in Fabric notebooks.
 
+`rebuild=False` (the default) is idempotent: an unchanged config rebuilds nothing and returns
+`status=skipped`. The key is `config_hash`, which fingerprints the config rows only — so a table
+that has appeared since the last generate and matches an existing glob is not picked up, and is
+not granted, until `rebuild=True` forces a full re-resolution. See
+[modes.md](../modes.md) for the skip's five exceptions.
+
 Generated mapping/control artifacts are sensitive. Do not commit a real mapping, output, or
 workbook to the public repository.
 

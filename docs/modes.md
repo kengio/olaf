@@ -73,6 +73,42 @@ A changed or unknown post-write boundary stops the chain, leaves the sentinel, a
 reports `possible_exposure` with the affected artifact/table version. Deleting the
 artifact would be containment only and is not described as erasing exposure.
 
+### The idempotency skip, and `rebuild`
+
+`generate(rebuild=False)` — the default — is idempotent. When the config is unchanged
+since the last generate it rebuilds nothing, logs one `no_change` row, and returns
+`status=skipped`, `changed=false`, so a pipeline can call generate every run and
+re-plan only when something moved.
+
+The comparison key is `config_hash`, a content fingerprint of the **config rows**.
+That is the whole of what it sees, and two consequences follow:
+
+- **It cannot see the Delta catalog.** A table created since the last generate that
+  matches an existing table glob leaves `config_hash` byte-identical, so the skip
+  holds and the new table is neither resolved into the mapping nor granted. This is
+  deliberate — a table appearing in a lakehouse is not consent to share it — and
+  `rebuild=True` is the deliberate way in. It re-resolves *every* pattern, so it also
+  takes in every other table added since the last generate, and drops from the mapping
+  any table that has since been deleted.
+- **It cannot see `onelake_security_member`**, which is a live input to every member
+  list. The exceptions below close that gap.
+
+Five things defeat the skip with no parameter, and a `rebuild=True` run never takes it:
+
+1. a config carrying a member `glob:` pattern is never eligible — the member table is
+   then a live grant list, and a principal added there must not be silently skipped;
+2. stamped member objectIds that no longer match what the member table resolves the
+   same names to today;
+3. a mapping stamped for a different workspace/lakehouse than the attached one;
+4. a member table carrying resolution errors — the fast path must not certify a state
+   the full gate calls a hard error;
+5. a mapping stamped by a different `framework_version` — content validated under
+   another version's rules has not been validated under these.
+
+Neither the skip nor a rebuild denies anything on its own. A table OLAF has not granted
+is simply one OLAF has not granted; whether anyone can read it still depends on
+workspace/item permissions and the access path.
+
 OLAF's RLS parser is a conservative guard, not an exhaustive service grammar. The
 current platform source is Microsoft's
 [RLS syntax](https://learn.microsoft.com/en-us/fabric/onelake/security/row-level-security-syntax).
