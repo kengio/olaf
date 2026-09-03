@@ -60,6 +60,21 @@ constant-content, PII-free sentinel under `Files/security`. Immediately before
 Creation, verification, existing-sentinel, readability, or revalidation uncertainty
 blocks before sensitive data is written.
 
+The snapshot compares the collection ETag and a digest of each role's *content* —
+name, rules, members. The server-assigned `id` and per-role `etag` are excluded on
+purpose: a collection that has never been written answers every read with the
+implicit `DefaultReader` under a freshly minted `id`, and a bulk PUT re-mints every
+id, so hashing them turned every first run on a fresh lakehouse into a false "DAR
+state changed". A real write between two reads still fails the compare, because it
+rotates the collection ETag.
+
+A refusal raised *inside* the creation step — the re-read after the sentinel was
+created disagrees with the approved snapshot — removes the sentinel that step
+created before re-raising. Nothing was written under it, and a marker that outlives
+a run which changed nothing only strands the next run behind an incident nobody had.
+A marker inherited from an outer, possibly mid-write, operation is never removed by
+an inner refusal.
+
 The owning run clears its sentinel only after the post-write boundary check succeeds.
 Otherwise the sentinel remains as an incident marker and blocks later sensitive
 modes. Generic cleanup preserves it. An explicit clearance requires a fresh safe
