@@ -6,6 +6,35 @@ Notable changes to OLAF — OneLake Access Framework — are recorded here using
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-03
+
+### Fixed
+
+- **The first run on a freshly created lakehouse no longer refuses with "DAR state changed after
+  the approved snapshot".** A OneLake security collection that has never been written answers
+  every `dataAccessRoles` read with the implicit `DefaultReader` under a freshly minted `id`,
+  while the collection ETag and the role's content stay identical. `ControlBoundary.snapshot_from`
+  hashed the whole role, `id` included, so the two reads `begin()` takes a second apart never
+  matched and every first-ever `generate` on a new lakehouse was refused — deterministically, on
+  every estate, and only there, because a collection `apply` has written once carries stable ids.
+  The digest now covers each role's content (name, rules, members) and excludes the
+  server-assigned `id` and per-role `etag`; the collection ETag compared beside it still catches a
+  real write between the two reads. `.roles` still carries the full payload. Observed on a
+  customer estate's first pipeline run, 2026-09-02.
+- **A refusal inside `begin()` no longer strands the sentinel.** `begin()` created the marker and
+  only then re-read the collection; when that re-read disagreed it raised before any lease
+  existed, so `release_unwritten_leases()` had nothing to hand back and the file outlived a run
+  that had written nothing. Every later sensitive operation — `clear_incident` included, since it
+  performs the same two-read compare — then met "control-data incident sentinel already exists"
+  for an incident nobody had. A refusal at that re-read now removes the marker it created and
+  re-raises; a marker inherited from an outer lease is left for that lease to clear.
+- `run_mode` hands back unwritten leases on the `error` path as well as on `blocked`. An
+  unexpected failure before the first prewrite is exactly as unwritten as a refusal; the unwind
+  still stops at the first lease that authorized a write, so genuinely uncertain state keeps its
+  marker on both paths.
+- `docs/control-data-security.md` now says what the snapshot compares and what it deliberately
+  ignores, and that a refusal inside the creation step cleans up after itself.
+
 ### Added
 
 - **`olaf_master_workflow` takes a `rebuild` parameter, defaulting to `False`**, and passes it to

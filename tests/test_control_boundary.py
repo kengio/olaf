@@ -320,13 +320,160 @@ def test_a_run_without_attestation_proceeds_but_never_claims_isolation(tmp_path,
 def test_snapshot_is_immutable_and_reconfirmation_does_not_refresh_after_change(
     tmp_path, monkeypatch
 ):
-    """Refreshing the approved snapshot after a race would authorize an unreviewed state."""
+    """Refreshing the approved snapshot after a race would authorize an unreviewed state.
+
+    The refusal is the contract; the marker is not. It used to be asserted present here, and that
+    pinned a defect: begin() had created the sentinel and raised before any lease existed, so
+    nothing could ever hand it back, and a run that wrote nothing left an incident behind for the
+    next one. A refusal inside begin() now removes the marker it created — see
+    test_a_refusal_inside_begin_does_not_strand_the_marker_it_created."""
     sentinel = tmp_path / "sentinel"
     monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
     client = FakeFabricClient([], enforce_etag=True)
     boundary = _boundary(client)
     approved = boundary.snapshot()
     client.simulate_external_edit()
+    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
+        boundary.begin("generate", snapshot=approved)
+    assert not sentinel.exists()
+
+
+def _never_written_collection():
+    """A lakehouse whose OneLake security has never been written.
+
+    Every read answers with the implicit `DefaultReader` under a freshly minted `id`, while the
+    collection ETag and the role's content stay identical. Observed live on a customer estate's
+    first-ever run (2026-09-02): two reads a second apart, two ids, one ETag."""
+    import uuid
+
+    class NeverWritten(FakeFabricClient):
+        def list_roles(self, timeout=None):
+            self.roles_etag = self._server_etag
+            return [
+                {
+                    "name": "DefaultReader",
+                    "id": str(uuid.uuid4()),
+                    "etag": '"RGVmYXVsdFJlYWRlcg=="',
+                    "kind": "Policy",
+                    "decisionRules": [
+                        {
+                            "effect": "Permit",
+                            "permission": [
+                                {"attributeName": "Action", "attributeValueIncludedIn": ["Read"]},
+                                {"attributeName": "Path", "attributeValueIncludedIn": ["*"]},
+                            ],
+                        }
+                    ],
+                    "members": {
+                        "fabricItemMembers": [
+                            {"sourcePath": "ws-guid/lh-guid", "itemAccess": ["ReadAll"]}
+                        ]
+                    },
+                }
+            ]
+
+    return NeverWritten([])
+
+
+def test_first_run_on_a_never_written_collection_is_not_a_dar_change(tmp_path, monkeypatch):
+    """The digest fingerprints who may read what. A server-minted `id` is bookkeeping.
+
+    Hashing the whole role made the first-ever `generate` on a fresh lakehouse refuse with
+    "DAR state changed" every time, because the implicit DefaultReader arrives under a new `id`
+    on every read. The collection ETag compared beside the digest is what catches a real write in
+    that window; the digest must not manufacture one."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    boundary = _boundary(_never_written_collection())
+
+    first, second = boundary.snapshot(), boundary.snapshot()
+    assert first.roles[0]["id"] != second.roles[0]["id"], "the fixture must re-mint the id"
+    assert first.roles_digest == second.roles_digest
+    assert first.roles[0]["id"], "the full payload behind .roles still carries the id"
+
+    lease = boundary.begin("generate")
+    assert sentinel.read_text(encoding="utf-8") == rt.ControlBoundary.SENTINEL_CONTENT
+    lease.prewrite()  # the just-in-time revalidation reads the collection again
+    lease.postcheck()
+    lease.clear()
+    assert not sentinel.exists()
+
+
+def test_a_content_change_under_the_same_etag_is_still_refused(tmp_path, monkeypatch):
+    """Dropping `id`/`etag` from the digest must not drop the content it exists to guard."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+
+    class Widening(FakeFabricClient):
+        reads = 0
+
+        def list_roles(self, timeout=None):
+            self.roles_etag = self._server_etag
+            paths = ["/Tables/sales"] if self.reads == 0 else ["/Tables/sales", "/Tables/hr"]
+            self.reads += 1
+            return [fake_role("Readers", paths, [GRP_READERS])]
+
+    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
+        _boundary(Widening([])).begin("generate")
+    assert not sentinel.exists()
+
+
+def test_a_refusal_inside_begin_does_not_strand_the_marker_it_created(tmp_path, monkeypatch):
+    """begin() creates the sentinel and only then re-reads the collection. Before this change a
+    refusal at that re-read raised with the file in place and no lease to release it through, so
+    the marker outlived a run that had written nothing — and the next run, and the one after,
+    met "sentinel already exists" for an incident nobody had."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([])
+    boundary = _boundary(client)
+    approved = boundary.snapshot()
+    client.simulate_external_edit()
+
+    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
+        boundary.begin("generate", snapshot=approved)
+
+    assert not sentinel.exists()
+    assert boundary.begin("generate").snapshot.etag == client.roles_etag, (
+        "the next run is not blocked behind a marker from a run that wrote nothing"
+    )
+
+
+def test_a_refusal_inside_begin_keeps_a_marker_it_did_not_create(tmp_path, monkeypatch):
+    """A nested stage re-reads the outer lease's sentinel rather than creating one. When the
+    nested begin() refuses, the marker belongs to the outer, possibly mid-write, operation — and
+    an inner refusal must never take it away."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([])
+    boundary = _boundary(client)
+    outer = boundary.begin("apply")
+    approved = boundary.snapshot()
+    client.simulate_external_edit()
+
+    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
+        boundary.begin("generate", snapshot=approved, sentinel_already_owned=True)
+
+    assert sentinel.read_text(encoding="utf-8") == rt.ControlBoundary.SENTINEL_CONTENT
+    assert outer.owns_sentinel
+
+
+def test_begin_cleanup_failure_still_refuses_and_leaves_the_marker(tmp_path, monkeypatch):
+    """The refusal is what the operator acts on. If the marker cannot be removed, it stays — the
+    next run then says so plainly — but the refusal must never be masked by the cleanup."""
+    import os as _os
+
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([])
+    boundary = _boundary(client)
+    approved = boundary.snapshot()
+    client.simulate_external_edit()
+
+    def boom(_path):
+        raise OSError("read-only filesystem")
+
+    monkeypatch.setattr(_os, "remove", boom)
     with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
         boundary.begin("generate", snapshot=approved)
     assert sentinel.read_text(encoding="utf-8") == rt.ControlBoundary.SENTINEL_CONTENT
@@ -1109,4 +1256,33 @@ def test_a_failing_release_never_masks_the_refusal(monkeypatch):
     assert outcome.envelope["status"] == "blocked"
     assert "matched 0 tables" in outcome.envelope["message"], (
         "the refusal survived the failing cleanup intact"
+    )
+
+
+def test_an_unexpected_error_before_any_write_does_not_strand_the_marker(monkeypatch):
+    """The release used to run only for a `blocked` verdict. An `error` verdict raised before any
+    write — a transient read, a Spark hiccup between begin() and the first prewrite — is exactly
+    as unwritten, and stranding the next run behind it is the same defect wearing a different
+    status. The unwind still stops at the first lease that authorized a write, so the state that
+    IS uncertain keeps its marker on this path too (test_release_unwritten_refuses_any_lease_that_
+    reached_a_write pins that half)."""
+    spark, client = _authored_runtime()
+
+    def transient(_self):
+        raise RuntimeError("catalog listing timed out")
+
+    with ols_env(spark, client):
+        with monkeypatch.context() as patched:
+            patched.setattr(rt.Deployment, "_run_validation", transient)
+            rt.OLAF.generate()
+            errored = rt.OLAF.last_result
+        assert errored["status"] == "error"
+        assert "catalog listing timed out" in errored["error"]
+
+        rt.OLAF.plan()
+        after = rt.OLAF.last_result
+
+    assert "sentinel already exists" not in str(after.get("message", "")), (
+        "an error that never authorized a write stranded the next operation behind an "
+        f"incident marker: {after.get('message')}"
     )
