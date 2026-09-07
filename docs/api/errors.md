@@ -27,7 +27,7 @@ OLAFError (category="unexpected")           base class; category feeds the audit
 │       ├── TargetNotFound                   matched no lakehouse in the attached workspace
 │       └── TargetAmbiguous                  matched more than one, differing only by case
 ├── DARHTTPError (category="http")           a Fabric DAR REST call failed (>=400, or the paginated budget was exceeded)
-│   └── DARConflictError                     the PUT's If-Match precondition failed (412) — live roles changed since this run's read; re-plan
+│   └── DARConflictError                     the PUT's If-Match precondition failed (412) — re-sent once when every role is unchanged; else re-plan
 ├── UsageError (category="validation")       a method was called in a way it cannot service (missing client, refused parameter, ...)
 ├── ControlDataGuardError (category="guard") a sensitive operation could not establish its narrow DAR/attestation boundary
 │   └── PostWriteBoundaryError               a confirmed sensitive write was followed by an unsafe or unreadable boundary
@@ -90,8 +90,10 @@ Message: `"ambiguous lakehouse names differing only by case: {spellings} -- rena
 ## DARConflictError
 
 Raised by `FabricClient.put_roles` on a **412** when the submitted `If-Match` condition does not
-hold. Stop, obtain a fresh DAR snapshot and ETag, and repeat the review; do not resend a stale
-token. If any earlier attempt received an ambiguous response, the final state remains unknown
+hold. On a first attempt `apply` re-reads the collection and re-sends once when every role is
+unchanged — the token moved for a reason other than a role write — so the error reaches you only
+when that re-send was refused too, when the re-read failed, or when a role really changed. Stop,
+obtain a fresh DAR snapshot and ETag, and repeat the review; do not resend a stale token. If any earlier attempt received an ambiguous response, the final state remains unknown
 until a fresh read classifies it. Neither OLAF's classification nor the ETag contract establishes
 atomic full-set replacement. See the
 [official bulk endpoint](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).

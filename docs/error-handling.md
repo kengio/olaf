@@ -76,6 +76,8 @@ anything about workspace sharing, prior reads, or unrelated storage:
 | no prepared row and no sensitive write | no real DAR request authorized | `false` |
 | prepared row without terminal result | request may not have started, may be in flight, or may have returned before failure | `null` when surfaced |
 | prepared plus first-attempt `412/rejected` | conditional request was refused | `false` |
+| prepared plus `push/retried` plus confirmed completion | the token moved with every role unchanged; the one re-send landed | `true` |
+| prepared plus `push/retried` plus `412/rejected` | the re-send was refused as well; nothing landed | `false` |
 | prepared plus `unknown` | a real request was attempted without authoritative result | `null` |
 | prepared plus confirmed completion | request returned success and completion evidence was confirmed | `true` |
 

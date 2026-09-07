@@ -521,7 +521,8 @@ def test_a_concurrent_edit_between_read_and_put_is_a_blocked_conflict():
     assert res["status"] == "blocked"  # a concurrency guard outcome, not an error+traceback
     assert "re-run mode=plan" in res["error"]
     real = [c for c in client.put_calls if not c["dry_run"]]
-    assert len(real) == 1  # exactly one attempt — no retry on a precondition that cannot heal
+    assert len(real) == 1  # exactly one attempt — a real role change is never retried
+    assert not [r for r in spark._store[LOG_TABLE] if r.get("action") == "push" and r.get("status") == "retried"]
     # nothing OLAF sent landed — the live set is exactly the concurrent edit the 412 protected
     assert [r["name"] for r in client._roles] == ["ForeignReaders"]
     log = spark._store[LOG_TABLE]
@@ -538,45 +539,117 @@ def test_a_concurrent_edit_between_read_and_put_is_a_blocked_conflict():
     assert not stamped
 
 
-def test_a_412_whose_concurrent_write_left_the_roles_unchanged_records_the_refusal():
-    """The collection ETag can move without any role changing — a live lakehouse does that on
-    its own — and the service's If-Match then draws a first-attempt 412 exactly as it would for
-    a real edit. Nothing landed, and the immutable DAR boundary still holds, so this is the
-    documented outcome the boundary's old ETag compare made unreachable: the trail RECORDS the
-    refusal — per-grant rows re-stamped failed, one push/rejected row naming the remedy — with no
-    mid-push forensics, because the state is known exactly: unchanged."""
-
-    class _EtagOnlyRace(FakeFabricClient):
-        def put_roles(self, roles, dry_run=False, etag=None, *, allow_unconditional=False):
-            if not dry_run:
-                self.simulate_external_edit()  # the token moves; the roles do not
-            return super().put_roles(
-                roles,
-                dry_run=dry_run,
-                etag=etag,
-                allow_unconditional=allow_unconditional,
-            )
-
+def _apply_with_race(client):
+    """setup → generate → plan → apply on fakes, returning the apply envelope."""
     spark = build_spark()
-    client = _EtagOnlyRace([], enforce_etag=True)
     run_runtime_blackbox("setup", spark)
     spark._store[CONFIG_TABLE] = sample_config_rows()
     seed_sample_members(spark)
     run_runtime_blackbox("generate", spark, client=client)
     run_runtime_blackbox("plan", spark, client=client)
-    outcome = run_runtime_blackbox("apply", spark, client=client)
-    res = outcome.envelope
+    return spark, run_runtime_blackbox("apply", spark, client=client).envelope
+
+
+def _push_rows(spark):
+    return [(r["action"], r["status"]) for r in spark._store[LOG_TABLE]
+            if r.get("mode") == "apply" and r.get("action") == "push"]
+
+
+class _EtagOnlyRace(FakeFabricClient):
+    """The collection ETag moves between apply's read and its PUT while no role changes — a
+    live lakehouse does that on its own. `rotations` says on which real attempts it happens."""
+
+    def __init__(self, *args, rotations=(1,), **kwargs):
+        super().__init__(*args, **kwargs)
+        self.real_attempts, self.rotations = 0, set(rotations)
+
+    def put_roles(self, roles, dry_run=False, etag=None, *, allow_unconditional=False):
+        if not dry_run:
+            self.real_attempts += 1
+            if self.real_attempts in self.rotations:
+                self.simulate_external_edit()  # the token moves; the roles do not
+        return super().put_roles(
+            roles, dry_run=dry_run, etag=etag, allow_unconditional=allow_unconditional
+        )
+
+
+def test_a_412_with_every_role_unchanged_is_retried_once_with_the_fresh_token_and_lands():
+    """A first-attempt 412 says the token moved, not that a role changed. When a re-read shows
+    every role byte-for-byte as approved, nothing an operator could review has changed, and
+    refusing would only send them to re-run plan against the same diff. So apply re-reads,
+    re-sends ONCE with the fresh token, and says so in the trail."""
+    client = _EtagOnlyRace([], enforce_etag=True, rotations=(1,))
+    spark, res = _apply_with_race(client)
+
+    assert res["status"] == "success"
+    assert client.real_attempts == 2
+    landed = {r["name"] for r in client._roles}
+    created = {r["role_name"] for r in spark._store[LOG_TABLE]
+               if r.get("mode") == "apply" and r.get("action") == "create"}
+    assert landed == created and landed, "the retried PUT is the one that landed"
+    pushes = _push_rows(spark)
+    assert pushes == [("push", "prepared"), ("push", "retried")]
+    retried = [r for r in spark._store[LOG_TABLE] if r.get("action") == "push" and r.get("status") == "retried"][0]
+    assert "unchanged" in retried["message"] and "fresh" in retried["message"]
+
+
+def test_a_412_that_recurs_on_the_retry_is_a_conflict_after_exactly_two_attempts():
+    """One retry, never a loop: a token that moves on every attempt is a busy lakehouse the
+    operator has to look at, and the second refusal is recorded like the first used to be."""
+    client = _EtagOnlyRace([], enforce_etag=True, rotations=(1, 2))
+    spark, res = _apply_with_race(client)
+
     assert res["status"] == "blocked"
     assert "re-run mode=plan" in res["error"]
-    assert len([c for c in client.put_calls if not c["dry_run"]]) == 1
+    assert client.real_attempts == 2
     assert client._roles == []  # nothing landed
-    apply_rows = [row for row in spark._store[LOG_TABLE] if row.get("mode") == "apply"]
-    pairs = {(row["action"], row["status"]) for row in apply_rows}
-    assert ("push", "prepared") in pairs and ("push", "rejected") in pairs
-    assert ("push", "failed") not in pairs, "a clean 412 is not a mid-push failure"
-    assert {row["status"] for row in apply_rows if row["action"] == "validate"} == {"failed"}
-    assert not [r for r in apply_rows if "PRESENT" in str(r.get("message"))]
-    assert not [r for r in apply_rows if "ABSENT" in str(r.get("message"))]
+    assert _push_rows(spark) == [("push", "prepared"), ("push", "retried"), ("push", "rejected")]
+    rejected = [r for r in spark._store[LOG_TABLE] if r.get("action") == "push" and r.get("status") == "rejected"][0]
+    assert "second attempt" in rejected["message"]
+
+
+def test_a_412_whose_re_read_fails_falls_back_to_the_conflict_record():
+    """The retry decision needs a fresh read. If that read fails, the run cannot say whether the
+    roles are unchanged — so it does not guess: no retry, the conflict is recorded as before."""
+
+    class _ReadFailsAfterConflict(_EtagOnlyRace):
+        failed_reads = 0
+
+        def list_roles(self, timeout=None):
+            if self.real_attempts and not self.failed_reads:  # the one read the retry decision needs
+                self.failed_reads += 1
+                raise RuntimeError("DAR read failed after the conflict")
+            return super().list_roles(timeout=timeout)
+
+    client = _ReadFailsAfterConflict([], enforce_etag=True, rotations=(1,))
+    spark, res = _apply_with_race(client)
+
+    assert res["status"] == "blocked"
+    assert client.real_attempts == 1
+    assert _push_rows(spark) == [("push", "prepared"), ("push", "rejected")]
+
+
+def test_a_412_retry_survives_a_failed_audit_append(monkeypatch):
+    """The retried row is transparency, not a gate: a logging failure must not turn a write the
+    boundary already authorized into a refusal."""
+    import _olaf_runtime as rt
+
+    client = _EtagOnlyRace([], enforce_etag=True, rotations=(1,))
+    write = rt.Log.write
+    failed = []
+
+    def write_once_failing(self, rows):
+        if any(r.get("status") == "retried" for r in rows) and not failed:
+            failed.append(rows)
+            raise RuntimeError("audit medium failed")
+        return write(self, rows)
+
+    monkeypatch.setattr(rt.Log, "write", write_once_failing)
+    spark, res = _apply_with_race(client)
+
+    assert failed, "the retried row was attempted"
+    assert res["status"] == "success"
+    assert client.real_attempts == 2
 
 
 def test_a_412_after_a_retried_transient_is_ambiguous_not_a_clean_conflict():

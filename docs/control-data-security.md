@@ -71,7 +71,9 @@ minute or two after unrelated table work with every role unchanged, which refuse
 first production run the same way. It stays on the snapshot as the If-Match token
 for the real PUT, so a write that lands between the read and the PUT is still
 refused — by the service, with a `412`, before anything lands. A write that changes
-no role content is, by definition, nothing this boundary has to refuse.
+no role content is, by definition, nothing this boundary has to refuse. A refusal
+names what differs — which roles were added, removed or changed since the approved
+snapshot — so the operator reads the reason from the refusal, not from a driver log.
 
 A refusal raised *inside* the creation step — the re-read after the sentinel was
 created disagrees with the approved snapshot — removes the sentinel that step
