@@ -553,9 +553,10 @@ def test_error_path_swallows_a_failing_audit_write():
 
 def test_long_blocked_reason_is_capped_but_payload_stays_parseable():
     """The raise path (blocked/error) emits a COMPACT payload: Fabric truncates a long raised
-    exception mid-JSON, so a long collect-all reason is capped (marker + full reason in the log)
-    and the payload stays valid JSON + parseable. The FULL reason is always in
-    onelake_security_log."""
+    exception mid-JSON, so a long collect-all reason is capped and the payload stays valid JSON +
+    parseable. The FULL reason is in onelake_security_log whenever a stage wrote a row — here it
+    did (a validation refusal writes its 'rejected' row); a guard refusal before any row would not,
+    which is why the marker no longer claims it."""
     spark, client = build_spark(), FakeFabricClient([])
     run_runtime_blackbox("setup", spark)  # create the control tables
     # a config whose 12 group members are all ABSENT from onelake_security_member -> one "not
@@ -580,7 +581,10 @@ def test_long_blocked_reason_is_capped_but_payload_stays_parseable():
     env = json.loads(o.raised)  # COMPACT payload still parses (the whole point)
     assert env["status"] == "blocked"
     assert env["data"] == {}  # data dropped on the raise path
-    assert "truncated; full reason in onelake_security_log" in env["error"]  # reason capped
+    assert env["error"].endswith("…[truncated]")  # reason capped, marker says only that
+    # `message` carries the reason's opening and promises the log only for rows a stage wrote
+    assert env["message"].startswith("blocked — " + env["error"][:100])
+    assert "when a stage wrote them" in env["message"]
     assert env["mode"] == "generate"
     assert "config_hash" in env
     # the FULL (untruncated) reason is durable in the log

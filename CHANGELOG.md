@@ -6,6 +6,34 @@ Notable changes to OLAF — OneLake Access Framework — are recorded here using
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-09-07
+
+### Fixed
+
+- **A first-attempt `412` on `apply` with every role unchanged is re-sent once with the fresh
+  token.** The collection ETag moves for reasons other than a role write (see 1.1.2), and on a
+  busy lakehouse it can do so in the seconds between `apply`'s read and its PUT. The service then
+  answers `412`, and until now that was recorded as a conflict and the operator sent to re-run
+  `plan` against the very same diff. `apply` now re-reads the collection first: when every role is
+  byte-for-byte what the run approved, it takes the fresh token, revalidates, re-sends **once**,
+  and records a `push`/`retried` row saying why. A second `412`, a re-read that fails, or a role
+  that really differs is recorded as the conflict exactly as before — nothing landed, re-run
+  `plan` — and the `push`/`rejected` row says a second attempt was refused as well. The
+  ambiguous (retried-transient) `412` still routes to the mid-push forensics untouched.
+- **A refusal says what changed.** "DAR state changed after the approved snapshot; refused instead
+  of refreshing authorization" now ends with the roles that were added, removed or changed since
+  the approved snapshot, e.g. `(roles: added ForeignReaders; changed Readers)`. Two incident
+  investigations had to recover that from a driver log.
+- **The raised envelope's `message` carries the reason.** It used to say only "full reason in
+  onelake_security_log", which is false whenever a guard refuses before any stage wrote a row — the
+  log is empty, and that is where it sent people. It now reads `<status> — <reason, shortened>
+  (batch …; audit rows, when a stage wrote them, in onelake_security_log)`; `error` still carries
+  the full reason, and the truncation marker is `…[truncated]`.
+- `olaf_master_workflow`'s failure report no longer says "validate never logs" for every stage. It
+  says the stage was refused before its audit trail could write, and points at the line above.
+- `docs/modes.md`, `docs/error-handling.md`, `docs/api/errors.md` and
+  `docs/control-data-security.md` describe the retry, the named refusal and the message.
+
 ## [1.1.2] - 2026-09-07
 
 ### Fixed

@@ -533,6 +533,58 @@ def test_a_first_prewrite_refusal_through_run_mode_hands_the_marker_back(monkeyp
     assert rt.ControlBoundary.SENTINEL_FULL_PATH not in lakehouse
 
 
+def test_a_refusal_names_a_role_that_was_added(tmp_path, monkeypatch):
+    """ "DAR state changed" sent two incident investigations to the driver log to learn WHAT
+    changed. The refusal now says it: which roles appeared, disappeared, or differ."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([fake_role("Readers", ["/Tables/sales"], [GRP_READERS])])
+    lease = _boundary(client).begin("generate")
+    client.simulate_external_role_change()
+
+    with pytest.raises(
+        rt.ControlDataGuardError, match="changed after the approved snapshot"
+    ) as excinfo:
+        lease.prewrite()
+    assert "roles: added ForeignReaders" in str(excinfo.value)
+
+
+def test_a_refusal_names_a_role_that_was_removed(tmp_path, monkeypatch):
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([fake_role("Readers", ["/Tables/sales"], [GRP_READERS])])
+    lease = _boundary(client).begin("generate")
+    client._roles.clear()
+    client.simulate_external_edit()
+
+    with pytest.raises(rt.ControlDataGuardError) as excinfo:
+        lease.prewrite()
+    assert "roles: removed Readers" in str(excinfo.value)
+
+
+def test_a_refusal_names_a_role_whose_content_changed(tmp_path, monkeypatch):
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([fake_role("Readers", ["/Tables/sales"], [GRP_READERS])])
+    lease = _boundary(client).begin("generate")
+    client._roles = [fake_role("Readers", ["/Tables/sales", "/Tables/hr"], [GRP_READERS])]
+    client.simulate_external_edit()
+
+    with pytest.raises(rt.ControlDataGuardError) as excinfo:
+        lease.prewrite()
+    assert "roles: changed Readers" in str(excinfo.value)
+
+
+def test_a_refusal_for_a_target_change_names_no_roles():
+    """The roles description is for role changes. A snapshot from another target refuses with the
+    plain sentence — begin() says the reserved set changed in its own words, and a target swap is
+    not a role edit an operator should go looking for."""
+    approved = _boundary().snapshot()
+    with pytest.raises(rt.ControlDataGuardError) as excinfo:
+        rt.ControlBoundary.require_same(approved, replace(approved, item_id="another-item"))
+    assert str(excinfo.value).endswith("refused instead of refreshing authorization")
+
+
 def test_a_refusal_inside_begin_does_not_strand_the_marker_it_created(tmp_path, monkeypatch):
     """begin() creates the sentinel and only then re-reads the collection. Before this change a
     refusal at that re-read raised with the file in place and no lease to release it through, so

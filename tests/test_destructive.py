@@ -818,11 +818,14 @@ def test_run_and_exit_refusal_is_the_same_sentence(mode):
     envelope = json.loads(str(excinfo.value))
     assert envelope["status"] == "blocked"
     assert envelope["error"] == interactive_only_refusal(mode)
-    # `message` is deliberately NOT the sentence here: the SystemExit payload swaps it for a short
-    # pointer at the pipeline's activity output ("blocked — full reason in onelake_security_log"),
-    # so `error` is the field carrying the reason. The in-process envelope keeps the sentence in
-    # both, and the drift test below reads `error` for exactly this reason.
-    assert envelope["message"].startswith("blocked — full reason in onelake_security_log")
+    # `message` is the one line the pipeline's activity output shows: the status, the reason
+    # itself (shortened), and where audit rows live WHEN a stage wrote them. It used to say only
+    # "full reason in onelake_security_log", which sent two incident investigations to an empty
+    # log — a guard that refuses before any row exists writes none. `error` still carries the
+    # full reason, and the drift test below reads `error` for exactly this reason.
+    assert envelope["message"].startswith("blocked — " + interactive_only_refusal(mode)[:160])
+    assert "when a stage wrote them" in envelope["message"]
+    assert "full reason in onelake_security_log" not in envelope["message"]
 
 
 def test_both_entry_points_cannot_drift_apart():

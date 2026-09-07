@@ -167,8 +167,13 @@ omission. Always inspect the request and post-state:
 [Bulk DAR `PUT`](https://learn.microsoft.com/en-us/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles).
 
 A first-attempt conditional `412` is a rejected request and does not trigger an
-automatic restore. An ambiguous request preserves the backup, prepared row, and
-sentinel. A confirmed `2xx` followed by audit failure reports `changed=true` and
+automatic restore. Before recording it, `apply` re-reads the collection once: when
+every role is byte-for-byte what the run approved, the token moved for a reason other
+than a role write (the collection ETag is a composite over more than the roles), so
+`apply` re-sends once with the fresh token and records a `push`/`retried` row. A
+second `412`, a re-read that fails, or a role that differs is recorded as the
+conflict — `push`/`rejected`, nothing landed, re-run `plan`. An ambiguous request
+preserves the backup, prepared row, and sentinel. A confirmed `2xx` followed by audit failure reports `changed=true` and
 the recovery pointers; it never says nothing changed.
 
 ## rollback — restore a prior config version, then re-run the whole chain
