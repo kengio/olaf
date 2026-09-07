@@ -522,7 +522,11 @@ def test_a_concurrent_edit_between_read_and_put_is_a_blocked_conflict():
     assert "re-run mode=plan" in res["error"]
     real = [c for c in client.put_calls if not c["dry_run"]]
     assert len(real) == 1  # exactly one attempt — a real role change is never retried
-    assert not [r for r in spark._store[LOG_TABLE] if r.get("action") == "push" and r.get("status") == "retried"]
+    assert not [
+        r
+        for r in spark._store[LOG_TABLE]
+        if r.get("action") == "push" and r.get("status") == "retried"
+    ]
     # nothing OLAF sent landed — the live set is exactly the concurrent edit the 412 protected
     assert [r["name"] for r in client._roles] == ["ForeignReaders"]
     log = spark._store[LOG_TABLE]
@@ -551,8 +555,11 @@ def _apply_with_race(client):
 
 
 def _push_rows(spark):
-    return [(r["action"], r["status"]) for r in spark._store[LOG_TABLE]
-            if r.get("mode") == "apply" and r.get("action") == "push"]
+    return [
+        (r["action"], r["status"])
+        for r in spark._store[LOG_TABLE]
+        if r.get("mode") == "apply" and r.get("action") == "push"
+    ]
 
 
 class _EtagOnlyRace(FakeFabricClient):
@@ -584,12 +591,19 @@ def test_a_412_with_every_role_unchanged_is_retried_once_with_the_fresh_token_an
     assert res["status"] == "success"
     assert client.real_attempts == 2
     landed = {r["name"] for r in client._roles}
-    created = {r["role_name"] for r in spark._store[LOG_TABLE]
-               if r.get("mode") == "apply" and r.get("action") == "create"}
+    created = {
+        r["role_name"]
+        for r in spark._store[LOG_TABLE]
+        if r.get("mode") == "apply" and r.get("action") == "create"
+    }
     assert landed == created and landed, "the retried PUT is the one that landed"
     pushes = _push_rows(spark)
     assert pushes == [("push", "prepared"), ("push", "retried")]
-    retried = [r for r in spark._store[LOG_TABLE] if r.get("action") == "push" and r.get("status") == "retried"][0]
+    retried = [
+        r
+        for r in spark._store[LOG_TABLE]
+        if r.get("action") == "push" and r.get("status") == "retried"
+    ][0]
     assert "unchanged" in retried["message"] and "fresh" in retried["message"]
 
 
@@ -604,7 +618,11 @@ def test_a_412_that_recurs_on_the_retry_is_a_conflict_after_exactly_two_attempts
     assert client.real_attempts == 2
     assert client._roles == []  # nothing landed
     assert _push_rows(spark) == [("push", "prepared"), ("push", "retried"), ("push", "rejected")]
-    rejected = [r for r in spark._store[LOG_TABLE] if r.get("action") == "push" and r.get("status") == "rejected"][0]
+    rejected = [
+        r
+        for r in spark._store[LOG_TABLE]
+        if r.get("action") == "push" and r.get("status") == "rejected"
+    ][0]
     assert "second attempt" in rejected["message"]
 
 
@@ -616,7 +634,9 @@ def test_a_412_whose_re_read_fails_falls_back_to_the_conflict_record():
         failed_reads = 0
 
         def list_roles(self, timeout=None):
-            if self.real_attempts and not self.failed_reads:  # the one read the retry decision needs
+            if (
+                self.real_attempts and not self.failed_reads
+            ):  # the one read the retry decision needs
                 self.failed_reads += 1
                 raise RuntimeError("DAR read failed after the conflict")
             return super().list_roles(timeout=timeout)

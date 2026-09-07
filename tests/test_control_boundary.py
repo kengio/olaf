@@ -534,7 +534,7 @@ def test_a_first_prewrite_refusal_through_run_mode_hands_the_marker_back(monkeyp
 
 
 def test_a_refusal_names_a_role_that_was_added(tmp_path, monkeypatch):
-    """"DAR state changed" sent two incident investigations to the driver log to learn WHAT
+    """ "DAR state changed" sent two incident investigations to the driver log to learn WHAT
     changed. The refusal now says it: which roles appeared, disappeared, or differ."""
     sentinel = tmp_path / "sentinel"
     monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
@@ -542,7 +542,9 @@ def test_a_refusal_names_a_role_that_was_added(tmp_path, monkeypatch):
     lease = _boundary(client).begin("generate")
     client.simulate_external_role_change()
 
-    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot") as excinfo:
+    with pytest.raises(
+        rt.ControlDataGuardError, match="changed after the approved snapshot"
+    ) as excinfo:
         lease.prewrite()
     assert "roles: added ForeignReaders" in str(excinfo.value)
 
