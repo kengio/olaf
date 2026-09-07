@@ -60,13 +60,18 @@ constant-content, PII-free sentinel under `Files/security`. Immediately before
 Creation, verification, existing-sentinel, readability, or revalidation uncertainty
 blocks before sensitive data is written.
 
-The snapshot compares the collection ETag and a digest of each role's *content* —
-name, rules, members. The server-assigned `id` and per-role `etag` are excluded on
-purpose: a collection that has never been written answers every read with the
-implicit `DefaultReader` under a freshly minted `id`, and a bulk PUT re-mints every
-id, so hashing them turned every first run on a fresh lakehouse into a false "DAR
-state changed". A real write between two reads still fails the compare, because it
-rotates the collection ETag.
+The snapshot compares a digest of each role's *content* — name, rules, members —
+plus the reserved-path set and the target workspace and item. The server-assigned
+`id` and per-role `etag` are excluded on purpose: a collection that has never been
+written answers every read with the implicit `DefaultReader` under a freshly minted
+`id`, and a bulk PUT re-mints every id, so hashing them turned every first run on a
+fresh lakehouse into a false "DAR state changed". The collection ETag is excluded
+too: it is a composite over more than the roles, and on a live lakehouse it moves a
+minute or two after unrelated table work with every role unchanged, which refused a
+first production run the same way. It stays on the snapshot as the If-Match token
+for the real PUT, so a write that lands between the read and the PUT is still
+refused — by the service, with a `412`, before anything lands. A write that changes
+no role content is, by definition, nothing this boundary has to refuse.
 
 A refusal raised *inside* the creation step — the re-read after the sentinel was
 created disagrees with the approved snapshot — removes the sentinel that step

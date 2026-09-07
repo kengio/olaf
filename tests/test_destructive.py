@@ -205,7 +205,7 @@ def test_reset_prewrite_blocks_backup_when_dar_changes_after_reset_entry(monkeyp
     log_before = [dict(row) for row in spark._store[LOG_TABLE]]
 
     def rotate_then_backup(*args, **kwargs):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return backup(*args, **kwargs)
 
     monkeypatch.setattr(dep, "_backup_live_roles", rotate_then_backup)
@@ -228,7 +228,7 @@ def test_reset_prewrite_blocks_real_put_after_a_safe_prepared_intent(monkeypatch
 
     def prepare_then_rotate(*args, **kwargs):
         result = prepared(*args, **kwargs)
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return result
 
     monkeypatch.setattr(dep, "_prepared_intent", prepare_then_rotate)

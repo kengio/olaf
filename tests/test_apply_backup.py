@@ -190,7 +190,7 @@ def test_apply_prewrite_blocks_backup_when_dar_changes_after_apply_entry(monkeyp
     log_before = [dict(row) for row in spark._store[LOG_TABLE]]
 
     def rotate_then_backup(*args, **kwargs):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return backup(*args, **kwargs)
 
     monkeypatch.setattr(dep, "_backup_live_roles", rotate_then_backup)
@@ -211,7 +211,7 @@ def test_apply_prewrite_blocks_real_put_after_a_safe_prepared_intent(monkeypatch
 
     def prepare_then_rotate(*args, **kwargs):
         result = prepared(*args, **kwargs)
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return result
 
     monkeypatch.setattr(dep, "_prepared_intent", prepare_then_rotate)
@@ -474,7 +474,7 @@ def test_backup_cleanup_preserves_recovery_artifacts_when_the_boundary_turns_uns
 
     def fail_after_artifact_creation(_roles, _handle):
         if boundary == "dar":
-            client.simulate_external_edit()
+            client.simulate_external_role_change()
         else:
             captured[rt.ControlBoundary.SENTINEL_FULL_PATH] = "tampered\n"
         raise OSError("backup medium failed")
@@ -519,7 +519,7 @@ def test_backup_cleanup_boundary_fact_does_not_mask_an_attribute_refusing_write_
     captured, removed = {}, []
 
     def fail_after_artifact_creation(_roles, _handle):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         raise AttributeRefusingOSError("backup medium failed")
 
     with lakehouse_writes(store=captured):

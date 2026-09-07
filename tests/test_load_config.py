@@ -108,7 +108,7 @@ def test_load_config_postwrite_etag_race_is_typed_changed_and_retains_sentinel()
             if self.race:
                 self.boundary_reads += 1
                 if self.boundary_reads == 4:
-                    self.simulate_external_edit()
+                    self.simulate_external_role_change()
             return super().list_roles_quick()
 
     spark, client, lakehouse = build_spark(), RacingClient(), {}
@@ -139,7 +139,7 @@ def test_load_config_prewrite_blocks_overwrite_after_dar_changes(monkeypatch):
 
         def create_then_rotate(*args, **kwargs):
             frame = create_frame(*args, **kwargs)
-            client.simulate_external_edit()
+            client.simulate_external_role_change()
             return frame
 
         monkeypatch.setattr(spark, "createDataFrame", create_then_rotate)

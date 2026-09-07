@@ -332,7 +332,7 @@ def test_snapshot_is_immutable_and_reconfirmation_does_not_refresh_after_change(
     client = FakeFabricClient([], enforce_etag=True)
     boundary = _boundary(client)
     approved = boundary.snapshot()
-    client.simulate_external_edit()
+    client.simulate_external_role_change()
     with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
         boundary.begin("generate", snapshot=approved)
     assert not sentinel.exists()
@@ -380,8 +380,8 @@ def test_first_run_on_a_never_written_collection_is_not_a_dar_change(tmp_path, m
 
     Hashing the whole role made the first-ever `generate` on a fresh lakehouse refuse with
     "DAR state changed" every time, because the implicit DefaultReader arrives under a new `id`
-    on every read. The collection ETag compared beside the digest is what catches a real write in
-    that window; the digest must not manufacture one."""
+    on every read. The digest must not manufacture a change; a real write is caught where it
+    matters — by the service's If-Match on the PUT — and by this digest if it changed a role."""
     sentinel = tmp_path / "sentinel"
     monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
     boundary = _boundary(_never_written_collection())
@@ -418,6 +418,121 @@ def test_a_content_change_under_the_same_etag_is_still_refused(tmp_path, monkeyp
     assert not sentinel.exists()
 
 
+def _etag_churn_collection():
+    """A live lakehouse: the collection ETag moves while the roles do not.
+
+    The DAR list's ETag is a composite over more than the roles. On a busy lakehouse it moves a
+    minute or two after unrelated table work, with every role byte-for-byte identical. Observed
+    live on a customer estate's first production run (2026-09-07): begin() agreed, the export-time
+    revalidation twenty seconds later met a new ETag, and a run that had written nothing was
+    refused with its marker left behind."""
+
+    class Churning(FakeFabricClient):
+        def list_roles(self, timeout=None):
+            self.simulate_external_edit()  # ETag only — identical roles under a new token
+            return super().list_roles(timeout=timeout)
+
+    return Churning([fake_role("Readers", ["/Tables/sales"], [GRP_READERS])])
+
+
+def test_a_collection_etag_move_with_identical_roles_is_not_a_dar_change(tmp_path, monkeypatch):
+    """The snapshot compares who may read what. The collection ETag is the PUT's If-Match token,
+    not a fingerprint of the roles: it moves for lakehouse-level reasons the boundary has no
+    business refusing on, and a write that changes nothing is by definition harmless."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    boundary = _boundary(_etag_churn_collection())
+
+    first, second = boundary.snapshot(), boundary.snapshot()
+    assert first.etag != second.etag, "the fixture must move the ETag on every read"
+    assert first.roles_digest == second.roles_digest
+
+    lease = boundary.begin("generate")
+    lease.prewrite()
+    lease.prewrite()  # the second write-time revalidation is where the live run was refused
+    lease.postcheck()
+    lease.clear()
+    assert not sentinel.exists()
+
+
+def test_a_refusal_at_the_first_prewrite_is_still_unwritten(tmp_path, monkeypatch):
+    """prewrite() marked the lease as having authorized a write and only then revalidated. When
+    that first revalidation refuses, nothing was authorized and nothing was written — yet the
+    marker was kept as if the state were uncertain, and run_mode could not hand it back."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([])
+    boundary = _boundary(client)
+    lease = boundary.begin("generate")
+    client.simulate_external_role_change()
+
+    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
+        lease.prewrite()
+
+    assert lease.authorized_write is False
+    assert boundary.release_unwritten(lease) is True
+    assert not sentinel.exists()
+
+
+def test_a_refusal_after_an_authorized_prewrite_keeps_the_marker(tmp_path, monkeypatch):
+    """Once a revalidation has authorized a write, a later refusal describes a state somebody has
+    to look at: the write may have landed. That marker stays for reviewed clearance."""
+    sentinel = tmp_path / "sentinel"
+    monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
+    client = FakeFabricClient([])
+    boundary = _boundary(client)
+    lease = boundary.begin("generate")
+    lease.prewrite()
+    client.simulate_external_role_change()
+
+    with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
+        lease.prewrite()
+
+    assert lease.authorized_write is True
+    assert boundary.release_unwritten(lease) is False
+    assert sentinel.read_text(encoding="utf-8") == rt.ControlBoundary.SENTINEL_CONTENT
+
+
+def test_generate_survives_a_collection_etag_move_between_its_revalidations(monkeypatch):
+    """The live sequence, end to end: begin() agreed, the ETag moved for a lakehouse-level reason
+    before the export-time revalidation, the roles never changed. generate must commit."""
+    spark, client = _authored_runtime()
+    dep = make_dep(spark, client, "generate")
+    export = rt.Deployment._export_history_csv
+
+    def rotate_then_export(self, *args, **kwargs):
+        client.simulate_external_edit()  # ETag only: the roles are unchanged
+        return export(self, *args, **kwargs)
+
+    monkeypatch.setattr(rt.Deployment, "_export_history_csv", rotate_then_export)
+    run_generate(dep)
+
+    assert spark._store[MAPPING_TABLE], "the mapping commit happened"
+    assert not Path(rt.ControlBoundary.SENTINEL_FULL_PATH).exists()
+
+
+def test_a_first_prewrite_refusal_through_run_mode_hands_the_marker_back(monkeypatch):
+    """A role change that lands before generate's first write is refused before anything is
+    written — so the marker goes back with the blocked envelope, exactly like a validation
+    refusal, and the next run is not blocked behind an incident nobody had."""
+    spark, client = _authored_runtime()
+    export = rt.Deployment._export_history_csv
+
+    def rotate_then_export(self, *args, **kwargs):
+        client.simulate_external_role_change()
+        return export(self, *args, **kwargs)
+
+    monkeypatch.setattr(rt.Deployment, "_export_history_csv", rotate_then_export)
+    lakehouse = {}
+    with ols_env(spark, client, store=lakehouse):
+        rt.OLAF.generate()
+
+    blocked = rt.OLAF.last_result
+    assert blocked["status"] == "blocked"
+    assert "changed after the approved snapshot" in blocked["error"]
+    assert rt.ControlBoundary.SENTINEL_FULL_PATH not in lakehouse
+
+
 def test_a_refusal_inside_begin_does_not_strand_the_marker_it_created(tmp_path, monkeypatch):
     """begin() creates the sentinel and only then re-reads the collection. Before this change a
     refusal at that re-read raised with the file in place and no lease to release it through, so
@@ -428,7 +543,7 @@ def test_a_refusal_inside_begin_does_not_strand_the_marker_it_created(tmp_path, 
     client = FakeFabricClient([])
     boundary = _boundary(client)
     approved = boundary.snapshot()
-    client.simulate_external_edit()
+    client.simulate_external_role_change()
 
     with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
         boundary.begin("generate", snapshot=approved)
@@ -449,7 +564,7 @@ def test_a_refusal_inside_begin_keeps_a_marker_it_did_not_create(tmp_path, monke
     boundary = _boundary(client)
     outer = boundary.begin("apply")
     approved = boundary.snapshot()
-    client.simulate_external_edit()
+    client.simulate_external_role_change()
 
     with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
         boundary.begin("generate", snapshot=approved, sentinel_already_owned=True)
@@ -468,7 +583,7 @@ def test_begin_cleanup_failure_still_refuses_and_leaves_the_marker(tmp_path, mon
     client = FakeFabricClient([])
     boundary = _boundary(client)
     approved = boundary.snapshot()
-    client.simulate_external_edit()
+    client.simulate_external_role_change()
 
     def boom(_path):
         raise OSError("read-only filesystem")
@@ -511,7 +626,7 @@ def test_lease_prewrite_refuses_a_dar_change_before_a_later_sensitive_write(tmp_
     monkeypatch.setattr(rt.ControlBoundary, "SENTINEL_FULL_PATH", str(sentinel))
     client = FakeFabricClient([])
     lease = _boundary(client).begin("generate")
-    client.simulate_external_edit()
+    client.simulate_external_role_change()
 
     with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):
         lease.prewrite()
@@ -642,7 +757,7 @@ def test_incident_clearance_prewrite_blocks_audit_when_dar_changes(tmp_path, mon
     original_write = dep.audit.write
 
     def rotate_before_audit(rows):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return original_write(rows)
 
     monkeypatch.setattr(dep.audit, "write", rotate_before_audit)
@@ -756,7 +871,7 @@ def test_setup_prewrite_blocks_schema_creation_after_the_lease_becomes_stale(mon
 
     def begin_then_rotate(*args, **kwargs):
         lease = begin(*args, **kwargs)
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return lease
 
     monkeypatch.setattr(dep, "_begin_sensitive", begin_then_rotate)
@@ -776,7 +891,7 @@ def test_setup_prewrite_blocks_its_audit_append_after_the_schema_is_safe(monkeyp
     write = dep.audit.write
 
     def rotate_then_write(rows):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return write(rows)
 
     monkeypatch.setattr(dep.audit, "write", rotate_then_write)
@@ -794,7 +909,7 @@ def test_generate_prewrite_blocks_the_first_history_or_mapping_write_after_a_dar
     log_before = [dict(row) for row in spark._store[LOG_TABLE]]
 
     def rotate_then_export(self, *args, **kwargs):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return export(self, *args, **kwargs)
 
     monkeypatch.setattr(rt.Deployment, "_export_history_csv", rotate_then_export)
@@ -814,7 +929,7 @@ def test_generate_prewrite_blocks_mapping_and_audit_after_a_safe_history_write(m
 
     def export_then_rotate(self, *args, **kwargs):
         result = export(self, *args, **kwargs)
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return result
 
     monkeypatch.setattr(rt.Deployment, "_export_history_csv", export_then_rotate)
@@ -834,7 +949,7 @@ def test_plan_prewrite_blocks_its_audit_append_after_dar_changes(monkeypatch):
     write = dep.audit.write
 
     def rotate_then_write(rows):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return write(rows)
 
     monkeypatch.setattr(dep.audit, "write", rotate_then_write)
@@ -853,7 +968,7 @@ def test_setup_postwrite_etag_race_is_typed_changed_and_retains_sentinel():
         def list_roles_quick(self):
             self.boundary_reads += 1
             if self.boundary_reads == 12:
-                self.simulate_external_edit()
+                self.simulate_external_role_change()
             return super().list_roles_quick()
 
     spark, client, lakehouse = build_spark(), RacingClient(), {}
@@ -878,7 +993,7 @@ def test_runtime_envelope_preserves_postwrite_boundary_recovery_facts():
         def list_roles_quick(self):
             self.boundary_reads += 1
             if self.boundary_reads == 12:
-                self.simulate_external_edit()
+                self.simulate_external_role_change()
             return super().list_roles_quick()
 
     spark, client = build_spark(), RacingClient()
@@ -903,7 +1018,7 @@ def test_generate_postwrite_etag_race_is_typed_and_names_export_artifact():
             if self.race:
                 self.boundary_reads += 1
                 if self.boundary_reads == 8:
-                    self.simulate_external_edit()
+                    self.simulate_external_role_change()
             return super().list_roles_quick()
 
     spark, client, lakehouse = build_spark(), RacingClient(), {}
@@ -931,7 +1046,7 @@ def test_plan_postwrite_etag_race_is_typed_and_names_affected_log_table():
             if self.race:
                 self.boundary_reads += 1
                 if self.boundary_reads == 4:
-                    self.simulate_external_edit()
+                    self.simulate_external_role_change()
             return super().list_roles_quick()
 
     spark, client, lakehouse = build_spark(), RacingClient(), {}
