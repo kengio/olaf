@@ -472,7 +472,7 @@ def test_rollback_prewrite_blocks_the_prepared_audit_after_dar_changes(monkeypat
     write = dep.audit.write
 
     def rotate_then_write(rows):
-        client.simulate_external_edit()
+        client.simulate_external_role_change()
         return write(rows)
 
     monkeypatch.setattr(dep.audit, "write", rotate_then_write)
@@ -493,7 +493,7 @@ def test_rollback_prewrite_blocks_restore_after_a_safe_prepared_intent(monkeypat
     def prepare_then_rotate(rows):
         result = write(rows)
         if any(row.get("action") == "rollback" and row.get("status") == "prepared" for row in rows):
-            client.simulate_external_edit()
+            client.simulate_external_role_change()
         return result
 
     monkeypatch.setattr(dep.audit, "write", prepare_then_rotate)
@@ -817,7 +817,7 @@ def test_rollback_artifact_probe_prewrite_blocks_creation_after_dar_changes(tmp_
     spark, client = ready(seed_members=False)
     dep = make_dep(spark, client, "rollback")
     lease = dep._begin_sensitive("rollback")
-    client.simulate_external_edit()
+    client.simulate_external_role_change()
 
     with mock.patch("os.makedirs") as makedirs:
         with pytest.raises(rt.ControlDataGuardError, match="changed after the approved snapshot"):

@@ -778,6 +778,15 @@ class FakeFabricClient:
         self._etag_serial += 1
         self._server_etag = f'"fake-etag-{self._etag_serial}"'
 
+    def simulate_external_role_change(self):
+        """Another actor's role write lands AND changes who may read what: a foreign role joins
+        the collection. Both fingerprints move — the content digest because a role was added,
+        the collection ETag because every write rotates it. This is the edit the control-data
+        boundary exists to refuse; `simulate_external_edit` above is the ETag-only movement a
+        conditional PUT sees (412) and a live lakehouse produces without any role changing."""
+        self._roles.append(fake_role("ForeignReaders", ["/Tables/foreign"], [GRP_READERS]))
+        self.simulate_external_edit()
+
     def list_roles_quick(self):
         # mirrors the real client's failure-path seam; the bound itself is FabricClient's business
         return self.list_roles()

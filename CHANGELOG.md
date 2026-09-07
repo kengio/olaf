@@ -6,6 +6,37 @@ Notable changes to OLAF — OneLake Access Framework — are recorded here using
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-09-07
+
+### Fixed
+
+- **A busy lakehouse no longer refuses `generate` with "DAR state changed after the approved
+  snapshot" when no role changed.** The DAR list's collection ETag is a composite over more than
+  the roles: on a live lakehouse it moves a minute or two after unrelated table work, with every
+  role byte-for-byte identical. `ControlBoundary.require_same` compared that ETag beside the
+  content digest, so a run whose write-time revalidation landed after such a move was refused —
+  on any lakehouse with concurrent table activity, and never on a quiet one, which is why the
+  1.1.1 verification passed. The compare now covers the content digest, the reserved-path set and
+  the target identity only. The collection ETag stays on the snapshot as the If-Match token the
+  real PUT sends, so a concurrent write is still refused where it matters — by the service, with
+  a `412`, before anything lands. Observed on a customer estate's first production run,
+  2026-09-07.
+- **A refusal at the first write-time revalidation no longer strands the sentinel.** `prewrite()`
+  marked the lease as having authorized a write *before* revalidating, so a refusal there —
+  nothing written, nothing uncertain — kept the marker that `release_unwritten_leases()` exists
+  to hand back, and the next run met "sentinel already exists" for an incident nobody had. The
+  lease now authorizes a write only once a revalidation has agreed; a refusal after that still
+  keeps the marker, because a write may have landed.
+
+### Changed
+
+- A first-attempt `412` on `apply` whose concurrent write left the roles unchanged now reaches
+  the documented outcome — the trail records the refusal (per-grant rows re-stamped `failed`, one
+  `push`/`rejected` row naming the remedy). Before, the ETag the boundary no longer compares
+  refused that follow-up audit append and only the prepared intent remained.
+- `docs/control-data-security.md` says what the snapshot compares now, and why the collection
+  ETag is deliberately not part of it.
+
 ## [1.1.1] - 2026-09-03
 
 ### Fixed
