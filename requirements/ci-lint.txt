@@ -32,9 +32,9 @@ matplotlib-inline==0.2.2 \
     --hash=sha256:3c821cf1c209f59fb2d2d64abbf5b23b67bcb2210d663f9918dd851c6da1fcf6 \
     --hash=sha256:72f3fe8fce36b70d4a5b612f899090cd0401deddc4ea90e1572b9f4bfb058c79
     # via ipython
-nbqa==1.9.1 \
-    --hash=sha256:95552d2f6c2c038136252a805aa78d85018aef922586270c3a074332737282e5 \
-    --hash=sha256:a1f4bcf587c597302fed295951001fc4e1be4ce0e77e1ab1b25ac2fbe3db0cdd
+nbqa==1.10.0 \
+    --hash=sha256:c0b028641f4c243abb038defa383fdd473c1b32e115fa447a64b58f461e027e7 \
+    --hash=sha256:c39a6213ac98a3f2b298d81eef85337e6de7591b265d8f8585a52df5b09323a8
     # via -r ci-lint.in
 parso==0.8.7 \
     --hash=sha256:a8926eb2a1b915486941fdbd31e86a4baf88fe8c210f25f2f35ecec5b574ca1c \
